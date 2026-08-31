@@ -1,4 +1,4 @@
-# BitSquiggle32 presentation
+# BitSquiggles presentation
 
 **Normative.** This chapter defines cells, rendering styles, and color
 conversion after the final connection mask is known. It depends on
@@ -9,7 +9,7 @@ conversion after the final connection mask is known. It depends on
 After the final connection mask is known, mark both endpoints of every selected
 edge as active. All other cells are inactive.
 
-Extract color indices from `mixed`:
+For both variants, extract color indices from `mixed`:
 
 ```text
 hueIndex       = bits 15…12
@@ -37,7 +37,7 @@ Derive ordered OKLCH components by style:
 Clamp both lightness values to `[0,1]`. Foreground hue is `hue`; background
 hue is `(hue + 180) modulo 360`.
 
-Calculate the XOR parity of all bits in the original, unmixed input. If the
+Calculate the XOR parity of all 32 or 40 bits in the original, unmixed input. If the
 parity is odd, swap the foreground and background lightness values. Do not swap
 hue or chroma. The returned `swapped` field reports this operation.
 

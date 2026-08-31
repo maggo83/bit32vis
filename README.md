@@ -1,22 +1,28 @@
 # BitSquiggles
 
-BitSquiggles is an experimental visual encoding for comparing two already-derived
-32-bit fingerprints. It turns the same value into the same compact pattern on
-different devices, including devices with very small or monochrome displays.
+BitSquiggles is an experimental family of visual encodings for comparing two
+already-derived short fingerprints or checksums. It turns the same value into
+the same compact pattern on different devices, including devices with very
+small or monochrome displays.
+
+BitSquiggle32 accepts a 32-bit value and uses a 7×5 grid. BitSquiggle40 accepts
+a 40-bit value and uses a 7×7 grid.
 
 The intended interaction is a side-by-side check: show the pattern on both
 devices and look for a difference. A typical example is comparing a BIP-32
 master-key fingerprint shown by a hardware wallet with the fingerprint shown
-by its companion application.
+by its companion application (32bit variant) or eight 5-bit characters of a
+BIP380 descriptor checksum (40bit variant).
 
-The project provides dependency-free reference implementations for Java 17,
-MicroPython-compatible Python, JavaScript, C99, and Dart. The algorithm and
+The project provides dependency-free BitSquiggle32 reference implementations
+for Java 17, MicroPython-compatible Python, JavaScript, C99, and Dart.
+BitSquiggle40 is specified but not yet implemented. The algorithms and
 conformance requirements are defined in [SPEC.md](SPEC.md); this README
 deliberately stays at the project and design-rationale level.
 
 ## Rendered examples
 
-Each sheet below is generated directly from the Java reference implementation.
+Each BitSquiggle32 sheet below is generated directly from the Java reference implementation.
 The four columns are Standard, High Contrast, Monochrome, and Black and White.
 Every column contains an 80×110 smooth rendering above its native, unscaled
 16×22 pixel raster. The color changes between styles; the encoded geometry does
@@ -42,20 +48,20 @@ optional-renderer, and test instructions.
 
 ## Why this project exists
 
-Eight hexadecimal digits are compact but tiring to compare, especially on a
-small screen. BitSquiggles explores whether a structured visual can make accidental
-mismatches easier to notice without requiring color, antialiasing, or a large
-display.
+Eight hexadecimal digits or eight descriptor-checksum characters are compact
+but tiring to compare, especially on a small screen. BitSquiggles explores
+whether a structured visual can make accidental mismatches easier to notice
+without requiring color, antialiasing, or a large display.
 
 It is useful when all of the following are true:
 
-- a protocol or application already has a meaningful 32-bit fingerprint;
+- a protocol or application already has a meaningful 32-bit or 40-bit value;
 - the same value can be displayed independently in two places;
 - a person can inspect both displays at roughly the same time;
 - the goal is convenient detection of accidental mismatch.
 
-BitSquiggles does not decide what should be fingerprinted. Deriving the correct
-32-bit input remains the caller's responsibility.
+BitSquiggles does not decide what should be fingerprinted or checksummed.
+Deriving and converting the correct input remains the caller's responsibility.
 
 ## Intended audience and uses
 
@@ -76,33 +82,36 @@ identity in a large collection.
 
 ### Not protection against a deliberate attacker
 
-The input contains only 32 bits. A targeted collision is computationally
-feasible, regardless of how those bits are displayed. BitSquiggles is not a
-cryptographic authentication mechanism and must not be treated as one.
+The input contains only 32 or 40 bits. A targeted collision may be feasible,
+regardless of how those bits are displayed. BitSquiggles is not a cryptographic
+authentication mechanism and must not be treated as one.
 
-A random value matches one fixed 32-bit value with probability $1/2^{32}$.
-That may be useful for detecting accidents, but it is not an adequate security
-boundary against an attacker who can search for inputs.
+A random value matches one fixed value with probability $1/2^{32}$ for
+BitSquiggle32 or $1/2^{40}$ for BitSquiggle40. That may be useful for detecting
+accidents, but it is not an adequate security boundary against an attacker who
+can search for inputs.
 
 ### Not a replacement for complete identifiers
 
 Do not reduce a Bitcoin address, payment destination, public key, transaction,
 or other long identifier to 32 bits and then use BitSquiggles as the authorization
-decision. Different identifiers can have the same 32-bit fingerprint and will
-then correctly produce the same pattern.
+decision. Different identifiers can have the same short fingerprint or checksum
+and will then correctly produce the same pattern.
 
 Payment destinations and other security-sensitive identifiers still require
 an appropriate exact or authenticated comparison of the complete value. A
-BitSquiggle32 can only be an additional cue.
+BitSquiggle can only be an additional cue.
 
 ### Not a hash, checksum, or fingerprint derivation function
 
-BitSquiggle32 accepts an unsigned 32-bit value. It does not:
+Each BitSquiggle variant accepts an unsigned integer of its named width. It does not:
 
 - accept arbitrary strings or byte arrays;
 - derive BIP-32 or other protocol fingerprints;
+- calculate or verify BIP380 descriptor checksums; the BitSquiggle40 helper
+  only converts eight already-derived checksum characters to an integer;
 - prove possession of a key;
-- add information that was discarded before the value reached BitSquiggle32;
+- add information that was discarded before the value reached the encoder;
 - provide cryptographic collision resistance.
 
 ## Design assumptions and choices
@@ -129,15 +138,15 @@ low-resolution displays.
 
 ### Diffusion must not discard information
 
-Nearby numeric inputs should not lead to nearby-looking outputs. BitSquiggle32 uses
-a reversible 32-bit mixer rather than a many-to-one hash: it improves avalanche
-while preserving the size and uniqueness of the input domain.
+Nearby numeric inputs should not lead to nearby-looking outputs. Each variant
+uses a reversible width-matched mixer rather than a many-to-one hash: it
+improves avalanche while preserving the size and uniqueness of the input domain.
 
 ### Invisible metadata cannot establish uniqueness
 
 The internal copy-family choice is not printed into the pattern, and different
-families can produce the same geometry. BitSquiggle32 resolves such overlaps by a
-canonical priority rule and a full-capacity fallback. Uniqueness is claimed for
+families can produce the same geometry. Both variants resolve such overlaps by
+a canonical priority rule and a full-capacity fallback. Uniqueness is claimed for
 the visible connection geometry, not for a hidden mode label.
 
 ### A tiny exact rendering is the portability baseline
@@ -146,6 +155,16 @@ The conformance representation is a fixed binary raster with no antialiasing.
 Each connection has dedicated pixels, allowing the abstract geometry to be
 recovered from the raster. Larger smooth renderings are presentation options;
 they do not redefine the encoded value.
+
+### Orientation is explicit
+
+Canonical output has a top and a left edge. BitSquiggle40 reserves the four
+connections incident to its center cell as an orientation marker: the upward
+connection is selected and the other three are clear. Consequently, rotating a
+BitSquiggle40 by 90, 180, or 270 degrees cannot turn it into the valid pattern
+for a different input. This does not make rotated output canonical, and it does
+not provide the same protection against reflection or arbitrary coordinate
+permutations.
 
 ### Reference implementations should be easy to audit and port
 
@@ -176,19 +195,22 @@ for the critique and pointers to existing other approaches like LifeHash!
 
 ## Status
 
-BitSquiggles is **experimental**. The project has tagged its first reference
-release, `v0.1.0-beta.1`, so beta testers and potential collaborators have a
-stable, citable point to integrate against. This is a beta: no further core
-changes are planned imminently, but encoding details (for example the
-diagonal `/` copy family) may still evolve based on integration feedback
-before a stable 1.0.
+BitSquiggles is **experimental**. The project has tagged its first
+BitSquiggle32 reference release, `v0.1.0-beta.1`, so beta testers and potential
+collaborators have a stable, citable point to integrate against. This is a
+beta: encoding details may still evolve based on integration feedback before a
+stable 1.0.
 
 Current state:
 
+- BitSquiggle32 and BitSquiggle40 share one normative specification structure;
+- BitSquiggle40 has a normative 7×7 encoding and conformance vector but no
+  reference implementation or generated cross-port fixture yet;
 - Java 17, MicroPython-compatible Python, JavaScript, C99, and Dart
-  implementations are present;
+  BitSquiggle32 implementations are present;
 - each implementation includes a dependency-free test suite;
-- the implementations share documented conformance vectors;
+- the BitSquiggle32 implementations share a documented conformance vector and
+  generated fixture;
 - uniqueness of the canonical connection mask is supported by a structural
   proof, while tests sample the implementation over large input sets;
 - the Java implementation includes an interactive Swing demo;

@@ -63,4 +63,5 @@ the only published artifacts so far.
 
 Releases remain experimental until the project changes that status in the root
 README. Release notes must preserve the safety boundary: BitSquiggles compares
-an already-derived 32-bit value and is not authentication or authorization.
+an already-derived 32-bit or 40-bit value and is not authentication or
+authorization.

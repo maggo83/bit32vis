@@ -1,4 +1,4 @@
-# BitSquiggle32 smooth output
+# BitSquiggles smooth output
 
 **Normative.** This chapter defines the presentation-only smooth output that
 preserves the canonical connection mask. Read [encoding](02-encoding.md)
@@ -17,7 +17,8 @@ foreground union, and renderers draw those rectangles. Every core provides the
 blob helper; renderers should use it unless the direct baseline is specifically
 needed.
 
-The direct procedure uses the same 16×22 coordinate system at any scale:
+The direct procedure uses the variant's exact-raster coordinate system at any
+scale:
 
 1. draw the complete background tile with rounded outer corners;
 2. represent every active 2×2 cell with corner radii equal to half the cell
@@ -93,7 +94,8 @@ features.
 
 Implementations can short-circuit at a missing internal edge and prune
 supersets retaining that edge when the tie-break winner remains unchanged. The
-fixed grid caps output at 82 blobs: 58 edges plus 24 junctions.
+fixed grids cap BitSquiggle32 output at 82 blobs (58 edges plus 24 junctions)
+and BitSquiggle40 output at 120 blobs (84 edges plus 36 junctions).
 
 ## Related
 

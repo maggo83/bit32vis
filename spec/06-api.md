@@ -1,4 +1,4 @@
-# BitSquiggle32 API contract
+# BitSquiggles API contract
 
 **Normative.** This chapter defines the public core and renderer surface.
 Shared semantics depend on [encoding](02-encoding.md), [presentation](03-presentation.md),
@@ -7,8 +7,10 @@ containers, validation, ownership, and helpers.
 
 ## Core API contract
 
-Every core exposes these public operations using its language's conventional
-naming, arguments, return values, and error reporting.
+Every conforming variant core exposes these public operations using its
+language's conventional naming, arguments, return values, and error reporting.
+BitSquiggle32 and BitSquiggle40 may share an implementation, but their public
+entry points must make the selected input width unambiguous.
 
 ### Application-facing operations
 
@@ -20,32 +22,45 @@ naming, arguments, return values, and error reporting.
 
 `spec()` is pure: it derives the mixed input, connections, active cells, colors,
 style, preferred and actual modes, fallback state, luminance index, and polarity
-metadata. `pixels()` is also pure and derives the exact 16×22 binary raster and
-its colors from the same input and style. Neither operation draws anything.
+metadata. `pixels()` is also pure and derives the variant's exact binary raster
+and its colors from the same input and style. Neither operation draws anything.
 `smoothBlobs()` is also pure; it consumes a canonical connection mask and
 returns the presentation-only ordered blob decomposition from
 [smooth output](05-smooth-output.md#canonical-blob-extraction).
+
+### BitSquiggle40 application adapter
+
+| Operation | Result |
+| --- | --- |
+| `bip380ChecksumInput(checksum)` | BitSquiggle40 input from exactly eight BIP380 checksum characters |
+
+`bip380ChecksumInput()` is a BitSquiggle40 helper with the validation and
+conversion behavior defined in
+[BIP380 checksum conversion](02-encoding.md#bip380-checksum-conversion). It does
+not accept a complete descriptor and does not verify or derive its checksum.
+BitSquiggle32-only entry points need not expose this helper.
 
 ### Public conformance helpers
 
 | Operation | Result |
 | --- | --- |
-| `mix32(input)` | bijective 32-bit mixed value |
-| `edges()` | 58 canonical edges in [encoding order](02-encoding.md#fixed-dimensions-values-and-ordering) |
+| `mix32(input)` or `mix40(input)` | bijective mixed value at the selected width |
+| `edges()` | 58 or 84 canonical edges in [encoding order](02-encoding.md#fixed-dimensions-values-and-ordering) |
 | `freeConnectionCount(mode)` | independent connection-class count |
 | `matchesMode(connections, mode)` | complete-family membership |
 
-Every core also exposes `ROWS`, `COLUMNS`, `EDGE_COUNT`, `PIXEL_WIDTH`, and
-`PIXEL_HEIGHT`; the four styles (Standard, High contrast, Monochrome, and Black
-and white); and mode labels `A|`, `A-`, `A+`, and `A/`. These helpers support
-diagnostics and conformance; applications normally use the preceding
+Every variant core also exposes `ROWS`, `COLUMNS`, `EDGE_COUNT`, `PIXEL_WIDTH`,
+and `PIXEL_HEIGHT`; the four styles (Standard, High contrast, Monochrome, and
+Black and white); and mode labels `A|`, `A-`, `A+`, and `A/`. These helpers
+support diagnostics and conformance; applications normally use the preceding
 application-facing operations.
 
 ## Renderer contract
 
-Optional target renderers append a framework identifier to the
-`BitSquiggle32Renderer` root, using the target language's normal naming style.
-Examples are Java `BitSquiggle32RendererSwing`, JavaScript
+Optional target renderers append a framework identifier to the selected
+`BitSquiggle32Renderer` or `BitSquiggle40Renderer` root, using the target
+language's normal naming style. Examples for the implemented 32-bit variant are
+Java `BitSquiggle32RendererSwing`, JavaScript
 `bitsquiggle32-renderer-canvas`, Python `bitsquiggle32_renderer_pillow`, and
 MicroPython `bitsquiggle32_renderer_lvgl`. A renderer is optional and does not
 change core identity or the [exact raster](04-exact-raster.md) contract.

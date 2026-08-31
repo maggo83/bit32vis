@@ -18,7 +18,8 @@ Thanks for helping improve BitSquiggles.
 3. Keep the core dependency-free; renderers and demos remain optional layers.
 4. Regenerate tracked gallery and fixture outputs when the Java generators require it.
 5. Do not weaken the project’s safety boundary: BitSquiggles compares an
-   already-derived 32-bit value and is not authentication or authorization.
+  already-derived 32-bit or 40-bit value and is not authentication or
+  authorization.
 6. Follow the shared-version and release requirements in [RELEASING.md](RELEASING.md).
 
 ## Validate before opening a pull request
