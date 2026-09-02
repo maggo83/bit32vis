@@ -19,7 +19,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - uses: dart-lang/setup-dart@v1
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
       - name: Install optional renderer system packages
         run: |
           sudo apt-get update
@@ -65,9 +68,16 @@ jobs:
           python3 micropython/test_bitsquiggles_core.py
           python3 micropython/test_bitsquiggle_renderer_framebuffer.py
           python3 micropython/test_bitsquiggle_renderer_lvgl.py
-      - name: Run Dart core tests
+      - name: Run Dart core and Flutter renderer tests
+        working-directory: dart
         run: |
-          dart dart/test_bitsquiggle32.dart
+          flutter pub get
+          dart format --output=none --set-exit-if-changed bitsquiggles_core.dart bitsquiggles_renderer_flutter.dart test_bitsquiggles_core.dart test_bitsquiggles_web.dart test
+          dart test_bitsquiggles_core.dart
+          dart compile js -O2 test_bitsquiggles_web.dart -o /tmp/bitsquiggles_web_test.js
+          node /tmp/bitsquiggles_web_test.js
+          flutter analyze bitsquiggles_core.dart bitsquiggles_renderer_flutter.dart test_bitsquiggles_core.dart test
+          flutter test
       - name: Run optional PyQt6 renderer tests
         run: |
           python3 -m pip install '.[pyqt6]'

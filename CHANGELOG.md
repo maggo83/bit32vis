@@ -11,6 +11,9 @@ rules are defined in [RELEASING.md](RELEASING.md).
   widths into one dependency-free ESM core, one Canvas renderer facade, shared
   declarations, and responsibility-based tests. The playground and package
   expose width-explicit operations from one renderer import.
+- Added BitSquiggle40 to the Dart port and consolidated both widths into one
+  dependency-free width-parameter core and one Flutter renderer façade. Added
+  responsibility-based core tests plus real Flutter Canvas and widget tests.
 - Added BitSquiggle40 to the Java port, consolidated both widths in one
   dependency-free internal core with neutral shared result types and
   generators, and retained one Swing and one JavaFX renderer class as the

@@ -12,6 +12,9 @@ dist/
 # JavaScript dependencies
 node_modules/
 
+# Dart tool state
+.dart_tool/
+
 # Editors and operating systems
 .vscode/
 .idea/

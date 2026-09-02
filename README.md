@@ -14,10 +14,9 @@ master-key fingerprint shown by a hardware wallet with the fingerprint shown
 by its companion application (32bit variant) or eight 5-bit characters of a
 BIP380 descriptor checksum (40bit variant).
 
-The project provides dependency-free reference implementations for Java 17,
-MicroPython-compatible Python, JavaScript, C99, and Dart. Java,
-MicroPython-compatible Python, JavaScript, and C99 support both BitSquiggle32
-and BitSquiggle40; Dart currently supports BitSquiggle32. The algorithms and
+The project provides dependency-free BitSquiggle32 and BitSquiggle40 reference
+implementations for Java 17, MicroPython-compatible Python, JavaScript, C99,
+and Dart. The algorithms and
 conformance requirements are defined in [SPEC.md](SPEC.md); this README
 deliberately stays at the project and design-rationale level.
 
@@ -215,9 +214,8 @@ stable 1.0.
 Current state:
 
 - BitSquiggle32 and BitSquiggle40 share one normative specification structure;
-- Java 17, MicroPython-compatible Python, JavaScript, and C99 implementations
-  are present for both variants;
-- the Dart BitSquiggle32 implementation is present;
+- Java 17, MicroPython-compatible Python, JavaScript, C99, and Dart
+  implementations are present for both variants;
 - Java-generated fixtures cover both variants for cross-port conformance;
 - each implementation includes a dependency-free test suite;
 - the BitSquiggle32 implementations share a documented conformance vector and
@@ -348,9 +346,11 @@ c/
   test_bitsquiggles_renderer_framebuffer.c Both-width renderer facade tests
   README.md                 C99 integration guide
 dart/
-  bitsquiggle32.dart        Dependency-free Dart core
-  bitsquiggles_renderer_flutter.dart Optional Flutter exact-raster and smooth renderer
-  test_bitsquiggle32.dart   Dart conformance and shared-fixture tests
+  bitsquiggles_core.dart    Shared dependency-free Dart 32/40-bit core
+  bitsquiggles_renderer_flutter.dart Unified Flutter application facade
+  test_bitsquiggles_core.dart Both-width conformance and property tests
+  test/                     Flutter Canvas and widget tests
+  pubspec.yaml              Non-published Flutter validation harness
   README.md                 Dart and Flutter integration guide
 micropython/
   bitsquiggles_core.py     Shared MicroPython-compatible 32/40-bit core
