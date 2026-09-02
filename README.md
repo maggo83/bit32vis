@@ -16,9 +16,8 @@ BIP380 descriptor checksum (40bit variant).
 
 The project provides dependency-free reference implementations for Java 17,
 MicroPython-compatible Python, JavaScript, C99, and Dart. Java,
-MicroPython-compatible Python, and C99 support both BitSquiggle32 and
-BitSquiggle40; JavaScript and Dart currently support BitSquiggle32. The
-algorithms and
+MicroPython-compatible Python, JavaScript, and C99 support both BitSquiggle32
+and BitSquiggle40; Dart currently supports BitSquiggle32. The algorithms and
 conformance requirements are defined in [SPEC.md](SPEC.md); this README
 deliberately stays at the project and design-rationale level.
 
@@ -30,7 +29,7 @@ Every column contains an 80×110 smooth rendering above its native, unscaled
 16×22 pixel raster. The color changes between styles; the encoded geometry does
 not.
 
-**Try any value in the [interactive playground](https://maggo83.github.io/BitSquiggles/).**
+**Try either variant in the [interactive playground](https://maggo83.github.io/BitSquiggles/).**
 It runs entirely in the browser and creates a shareable link for each value.
 
 | Input | Representative behavior | Rendered styles and native rasters |
@@ -216,9 +215,9 @@ stable 1.0.
 Current state:
 
 - BitSquiggle32 and BitSquiggle40 share one normative specification structure;
-- Java 17, MicroPython-compatible Python, and C99 implementations are present
-  for both variants;
-- JavaScript and Dart BitSquiggle32 implementations are present;
+- Java 17, MicroPython-compatible Python, JavaScript, and C99 implementations
+  are present for both variants;
+- the Dart BitSquiggle32 implementation is present;
 - Java-generated fixtures cover both variants for cross-port conformance;
 - each implementation includes a dependency-free test suite;
 - the BitSquiggle32 implementations share a documented conformance vector and
@@ -369,7 +368,10 @@ fixtures/v1-32.json        Versioned 32-bit cross-language conformance fixture
 fixtures/v1-40.json        Versioned 40-bit cross-language conformance fixture
 pyproject.toml              CPython package metadata for BitSquiggles
 web/                       Static GitHub Pages playground, ESM package, and tests
-  bitsquiggle32-renderer-canvas.js Optional Canvas 2D renderer
+  bitsquiggles-core.js      Shared JavaScript 32/40-bit core
+  bitsquiggles-renderer-canvas.js Unified Canvas 2D application facade
+  bitsquiggles-core.test.mjs Both-width conformance and property tests
+  bitsquiggles-renderer-canvas.test.mjs Canvas facade tests
   playground.js             Live playground application
 web/README.md               JavaScript and TypeScript integration guide
 .githooks/pre-commit       Regenerates and stages example sheets locally

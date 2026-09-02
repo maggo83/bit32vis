@@ -7,6 +7,10 @@ rules are defined in [RELEASING.md](RELEASING.md).
 
 - Renamed the 32-bit conformance fixture from `fixtures/v1.json` to
   `fixtures/v1-32.json`, matching `fixtures/v1-40.json`.
+- Added BitSquiggle40 to the JavaScript/TypeScript port and consolidated both
+  widths into one dependency-free ESM core, one Canvas renderer facade, shared
+  declarations, and responsibility-based tests. The playground and package
+  expose width-explicit operations from one renderer import.
 - Added BitSquiggle40 to the Java port, consolidated both widths in one
   dependency-free internal core with neutral shared result types and
   generators, and retained one Swing and one JavaFX renderer class as the

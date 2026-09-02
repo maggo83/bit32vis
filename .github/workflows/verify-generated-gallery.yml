@@ -55,6 +55,8 @@ jobs:
         run: java --module-path out/core --module io.github.maggo83.bitsquiggles/bitsquiggles.GalleryGenerator --check
       - name: Verify generated conformance fixtures
         run: java --module-path out/core --module io.github.maggo83.bitsquiggles/bitsquiggles.ConformanceFixtureGenerator --check
+      - name: Install JavaScript development dependencies
+        run: npm ci --prefix web
       - name: Run JavaScript core and playground tests
         run: npm test --prefix web
       - name: Run MicroPython-compatible tests under CPython

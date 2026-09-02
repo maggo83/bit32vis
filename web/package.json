@@ -1,31 +1,32 @@
 {
   "name": "bitsquiggles",
   "version": "0.1.0-beta.1",
-  "description": "Dependency-free BitSquiggle32 visual encoding",
+  "description": "Dependency-free BitSquiggle32 and BitSquiggle40 visual encodings",
   "type": "module",
   "exports": {
     ".": {
-      "types": "./bitsquiggle32.d.ts",
-      "import": "./bitsquiggle32.js",
-      "default": "./bitsquiggle32.js"
+      "types": "./bitsquiggles-core.d.ts",
+      "import": "./bitsquiggles-core.js",
+      "default": "./bitsquiggles-core.js"
     },
     "./renderer-canvas": {
-      "types": "./bitsquiggle32-renderer-canvas.d.ts",
-      "import": "./bitsquiggle32-renderer-canvas.js",
-      "default": "./bitsquiggle32-renderer-canvas.js"
+      "types": "./bitsquiggles-renderer-canvas.d.ts",
+      "import": "./bitsquiggles-renderer-canvas.js",
+      "default": "./bitsquiggles-renderer-canvas.js"
     }
   },
-  "types": "./bitsquiggle32.d.ts",
+  "types": "./bitsquiggles-core.d.ts",
   "files": [
-    "bitsquiggle32.js",
-    "bitsquiggle32.d.ts",
-    "bitsquiggle32-renderer-canvas.js",
-    "bitsquiggle32-renderer-canvas.d.ts",
+    "bitsquiggles-core.js",
+    "bitsquiggles-core.d.ts",
+    "bitsquiggles-renderer-canvas.js",
+    "bitsquiggles-renderer-canvas.d.ts",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "test": "node bitsquiggle32.test.mjs && node playground.test.mjs",
+    "test": "node bitsquiggles-core.test.mjs && node bitsquiggles-renderer-canvas.test.mjs && node playground.test.mjs && npm run types:check",
+    "types:check": "tsc -p tsconfig.json",
     "pack:check": "npm pack --dry-run"
   },
   "license": "SEE LICENSE IN LICENSE",
@@ -34,5 +35,8 @@
     "url": "git+https://github.com/maggo83/BitSquiggles.git",
     "directory": "web"
   },
-  "homepage": "https://github.com/maggo83/BitSquiggles#readme"
+  "homepage": "https://github.com/maggo83/BitSquiggles#readme",
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
 }
