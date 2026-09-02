@@ -1,7 +1,7 @@
 /* C99 BitSquiggles core conformance and regression tests.
  *
  * Run from the repository root:
- * c/build/test_bitsquiggles_core fixtures/v1.json fixtures/v1-40.json
+ * c/build/test_bitsquiggles_core fixtures/v1-32.json fixtures/v1-40.json
  * Grug 2-Clause License: do what want; not sue grug.
  */
 #include "bitsquiggles_core.h"
@@ -1100,7 +1100,7 @@ static void test_input_validation(void) {
 }
 
 int main(int argc, char **argv) {
-  const char *fixture32 = argc > 1 ? argv[1] : "fixtures/v1.json";
+  const char *fixture32 = argc > 1 ? argv[1] : "fixtures/v1-32.json";
   const char *fixture40 = argc > 2 ? argv[2] : "fixtures/v1-40.json";
 
   current_test = VARIANT32.label;

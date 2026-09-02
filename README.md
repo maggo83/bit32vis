@@ -14,9 +14,11 @@ master-key fingerprint shown by a hardware wallet with the fingerprint shown
 by its companion application (32bit variant) or eight 5-bit characters of a
 BIP380 descriptor checksum (40bit variant).
 
-The project provides dependency-free BitSquiggle32 reference implementations
-for Java 17, MicroPython-compatible Python, JavaScript, C99, and Dart.
-BitSquiggle40 is specified but not yet implemented. The algorithms and
+The project provides dependency-free reference implementations for Java 17,
+MicroPython-compatible Python, JavaScript, C99, and Dart. Java,
+MicroPython-compatible Python, and C99 support both BitSquiggle32 and
+BitSquiggle40; JavaScript and Dart currently support BitSquiggle32. The
+algorithms and
 conformance requirements are defined in [SPEC.md](SPEC.md); this README
 deliberately stays at the project and design-rationale level.
 
@@ -40,10 +42,20 @@ It runs entirely in the browser and creates a shareable link for each value.
 | `12345678` | Sparse left/right output (`A\|`) | ![Input 12345678 in Standard, High Contrast, Monochrome, and Black and White](docs/examples/12345678.svg) |
 | `ffffffff` | Denser left/right output (`A\|`) | ![Input ffffffff in Standard, High Contrast, Monochrome, and Black and White](docs/examples/ffffffff.svg) |
 
+BitSquiggle40 uses a square 7x7 graph and a 22x22 exact raster. Its fixed
+center marker makes the intended orientation explicit.
+
+| 40-bit input | Rendered styles and native rasters |
+| --- | --- |
+| `0000000000` | ![40-bit input 0000000000](docs/examples/40-0000000000.svg) |
+| `0000000001` | ![40-bit input 0000000001](docs/examples/40-0000000001.svg) |
+| `39527804db` | ![BIP380 checksum input 39527804db](docs/examples/40-39527804db.svg) |
+| `ffffffffff` | ![40-bit input ffffffffff](docs/examples/40-ffffffffff.svg) |
+
 ## Quick start
 
 Choose the target language in the [reference implementation guides](#reference-implementation-guides).
-Each guide is the single source for its installation, core API, exact-raster,
+Each guide is the single source for its installation, application API, exact-raster,
 optional-renderer, and test instructions.
 
 ## Why this project exists
@@ -204,10 +216,10 @@ stable 1.0.
 Current state:
 
 - BitSquiggle32 and BitSquiggle40 share one normative specification structure;
-- BitSquiggle40 has a normative 7×7 encoding and conformance vector but no
-  reference implementation or generated cross-port fixture yet;
-- Java 17, MicroPython-compatible Python, JavaScript, C99, and Dart
-  BitSquiggle32 implementations are present;
+- Java 17, MicroPython-compatible Python, and C99 implementations are present
+  for both variants;
+- JavaScript and Dart BitSquiggle32 implementations are present;
+- Java-generated fixtures cover both variants for cross-port conformance;
 - each implementation includes a dependency-free test suite;
 - the BitSquiggle32 implementations share a documented conformance vector and
   generated fixture;
@@ -270,7 +282,8 @@ it manually after changing rendering behavior, run:
 ```bash
 mkdir -p out/core
 javac -d out/core java/core/module-info.java \
-  java/core/bitsquiggles/BitSquiggle32.java \
+  java/core/bitsquiggles/BitSquiggles.java \
+  java/core/bitsquiggles/internal/BitSquigglesCore.java \
   java/core/bitsquiggles/GalleryGenerator.java \
   java/core/bitsquiggles/ConformanceFixtureGenerator.java
 java --module-path out/core --module io.github.maggo83.bitsquiggles/bitsquiggles.GalleryGenerator
@@ -310,19 +323,21 @@ AGENTS.md                  concise guide for coding agents
 RELEASING.md               shared versioning and release procedure
 CHANGELOG.md               released and planned change history
 java/core/
-  module-info.java          Headless core JPMS descriptor
+  module-info.java          Shared model/internal implementation descriptor
   bitsquiggles/
-    BitSquiggle32.java       Java reference implementation
-    BitSquiggle32Test.java   Java conformance and property tests
+    BitSquiggles.java        Neutral public renderer model
+    internal/BitSquigglesCore.java
+                            Internal generic 32/40-bit reference implementation
+    BitSquigglesCoreTest.java Both-width conformance and property tests
     BitSquigglesDemo.java    Java Swing demonstration
-    GalleryGenerator.java    Deterministic README example-sheet generator
-    ConformanceFixtureGenerator.java Java-generated cross-language test fixtures
+    GalleryGenerator.java    Both-width README example-sheet generator
+    ConformanceFixtureGenerator.java Both-width cross-language fixture generator
 java/renderer-swing/        Optional Swing/Java2D renderer JPMS module
-  bitsquiggles/renderer/swing/BitSquiggle32RendererSwing.java
-                            Smooth and exact renderers
+  bitsquiggles/renderer/swing/BitSquigglesRendererSwing.java
+                            Shared renderer with explicit 32/40-bit methods
 java/renderer-javafx/       Optional JavaFX renderer JPMS module
-  bitsquiggles/renderer/javafx/BitSquiggle32RendererJavaFX.java
-                            Smooth and exact renderers
+  bitsquiggles/renderer/javafx/BitSquigglesRendererJavaFX.java
+                            Shared renderer with explicit 32/40-bit methods
 java/README.md              Java integration and rendering guide
 c/
   bitsquiggles_core.h       Shared C99 32/40-bit core API
@@ -339,14 +354,20 @@ dart/
   test_bitsquiggle32.dart   Dart conformance and shared-fixture tests
   README.md                 Dart and Flutter integration guide
 micropython/
-  bitsquiggle32.py         MicroPython-compatible implementation
-  bitsquiggles_renderer_pyqt6.py Optional PyQt6 exact-raster and smooth renderers
-  bitsquiggles_renderer_lvgl.py Optional LVGL exact-raster and smooth renderers
-  test_bitsquiggle32.py    Python conformance and property tests
+  bitsquiggles_core.py     Shared MicroPython-compatible 32/40-bit core
+  generate_packed_tables.py Design-time packed-table generator
+  bitsquiggle_renderer_framebuffer.py Generic exact-raster renderer
+  bitsquiggle_renderer_pyqt6.py Optional PyQt6 exact-raster and smooth renderer
+  bitsquiggle_renderer_lvgl.py Optional LVGL exact-raster and smooth renderer
+  test_bitsquiggles_core.py 32/40-bit conformance and property tests
+  test_bitsquiggle_renderer_framebuffer.py Framebuffer renderer tests
+  test_bitsquiggle_renderer_lvgl.py CPython-fake LVGL renderer tests
+  test_bitsquiggle_renderer_pyqt6.py Offscreen PyQt6 renderer tests
   README.md                 Python and MicroPython integration guide
 docs/examples/             Generated README example sheets
-fixtures/v1.json           Versioned cross-language conformance fixture
-pyproject.toml              CPython package metadata for `bitsquiggle32`
+fixtures/v1-32.json        Versioned 32-bit cross-language conformance fixture
+fixtures/v1-40.json        Versioned 40-bit cross-language conformance fixture
+pyproject.toml              CPython package metadata for BitSquiggles
 web/                       Static GitHub Pages playground, ESM package, and tests
   bitsquiggle32-renderer-canvas.js Optional Canvas 2D renderer
   playground.js             Live playground application
@@ -358,8 +379,8 @@ web/README.md               JavaScript and TypeScript integration guide
 When behavior, constants, or formats change, update the affected
 [normative specification chapter](SPEC.md) and the conformance tests together.
 When rendering changes, regenerate
-`docs/examples/` and `fixtures/v1.json` with their Java generators as
-described above. Keep project motivation, safety boundaries, status, and
+`docs/examples/`, `fixtures/v1-32.json`, and `fixtures/v1-40.json` with their
+Java generators as described above. Keep project motivation, safety boundaries, status, and
 trade-offs here; keep normative behavior in the specification; and keep
 language-specific setup and rendering instructions in the port guides.
 

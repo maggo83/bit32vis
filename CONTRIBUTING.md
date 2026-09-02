@@ -14,7 +14,8 @@ Thanks for helping improve BitSquiggles.
 
 1. Propose behavior, format, or API changes in the owning normative chapter
   linked from [SPEC.md](SPEC.md) first.
-2. Keep every maintained core implementation conformant with `fixtures/v1.json`.
+2. Keep every maintained core implementation conformant with
+  `fixtures/v1-32.json` and `fixtures/v1-40.json`.
 3. Keep the core dependency-free; renderers and demos remain optional layers.
 4. Regenerate and verify tracked generated artifacts according to their owning
   port guides.

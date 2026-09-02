@@ -236,7 +236,7 @@ void testInvalidInputsAndImmutability() {
 
 void testFixture() {
   final fixtureFile = File.fromUri(
-    Platform.script.resolve('../fixtures/v1.json'),
+    Platform.script.resolve('../fixtures/v1-32.json'),
   );
   final fixture =
       jsonDecode(fixtureFile.readAsStringSync()) as Map<String, dynamic>;

@@ -102,7 +102,7 @@ dart run test_bitsquiggle32.dart
 The dependency-free executable checks dimensions, all 58 ordered edges, class
 counts, the `0x89abcdef` golden vector, exact raster recovery, styles, invalid
 inputs, smooth blobs, and every Java-generated vector and style in
-[fixtures/v1.json](../fixtures/v1.json).
+[fixtures/v1-32.json](../fixtures/v1-32.json).
 
 For the optional renderer, analyze it in a Flutter project that contains both
 standalone source files:

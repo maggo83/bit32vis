@@ -28,7 +28,7 @@ check-generated:
 	$(PYTHON) generate_packed_tables.py --check
 
 test: check-generated $(TEST_BINS)
-	$(CORE_TEST_BIN) ../fixtures/v1.json ../fixtures/v1-40.json
+	$(CORE_TEST_BIN) ../fixtures/v1-32.json ../fixtures/v1-40.json
 	$(RENDERER_TEST_BIN)
 
 clean:

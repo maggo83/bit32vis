@@ -7,7 +7,7 @@ import {
 import * as canvasRenderer from "./bitsquiggle32-renderer-canvas.js";
 import * as core from "./bitsquiggle32.js";
 
-const fixtures = JSON.parse(await readFile(new URL("../fixtures/v1.json", import.meta.url), "utf8"));
+const fixtures = JSON.parse(await readFile(new URL("../fixtures/v1-32.json", import.meta.url), "utf8"));
 assert.equal(fixtures.schema, "bitsquiggles-conformance", "known fixture schema");
 assert.equal(fixtures.version, 1, "known fixture version");
 assert.deepEqual(fixtures.dimensions, { rows: 7, columns: 5, edges: 58, pixelWidth: 16, pixelHeight: 22 }, "known dimensions");

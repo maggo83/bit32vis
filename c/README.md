@@ -191,7 +191,7 @@ scaled output, validation, and callback failures. From the repository root,
 the built harnesses can also be run directly:
 
 ```sh
-c/build/test_bitsquiggles_core fixtures/v1.json fixtures/v1-40.json
+c/build/test_bitsquiggles_core fixtures/v1-32.json fixtures/v1-40.json
 c/build/test_bitsquiggles_renderer_framebuffer
 ```
 

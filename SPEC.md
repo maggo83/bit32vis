@@ -57,7 +57,7 @@ graph TD
   S --> C
   A --> C
   A --> G[Port integration guides]
-  C --> F[fixtures/v1.json]
+  C --> F[fixtures/v1-32.json]
 ```
 
 ## Task-oriented reading paths
@@ -77,7 +77,9 @@ The words **must**, **must not**, **should**, and **may** in the normative
 chapters indicate requirement strength. A conforming implementation satisfies
 all **must** and **must not** statements.
 
-The versioned cross-port fixture is [fixtures/v1.json](fixtures/v1.json).
+The versioned cross-port fixtures are
+[fixtures/v1-32.json](fixtures/v1-32.json) and
+[fixtures/v1-40.json](fixtures/v1-40.json).
 Generated gallery examples are in [docs/examples/](docs/examples/). Their Java
 generators and validation commands are owned by
 [the conformance chapter](spec/07-conformance.md) and the

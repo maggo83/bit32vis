@@ -20,24 +20,37 @@ jobs:
         with:
           node-version: '22'
       - uses: dart-lang/setup-dart@v1
+      - name: Install optional renderer system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libegl1 openjfx
       - name: Compile headless Java core module
         run: |
-          mkdir -p out/core out/renderer-swing out/test
+          mkdir -p out/core out/renderer-swing out/renderer-javafx out/test
           javac -d out/core java/core/module-info.java \
-            java/core/bitsquiggles/BitSquiggle32.java \
+            java/core/bitsquiggles/BitSquiggles.java \
+            java/core/bitsquiggles/internal/BitSquigglesCore.java \
             java/core/bitsquiggles/GalleryGenerator.java \
             java/core/bitsquiggles/ConformanceFixtureGenerator.java
       - name: Compile optional Java2D renderer module
         run: |
           javac -d out/renderer-swing --module-path out/core java/renderer-swing/module-info.java \
-            java/renderer-swing/bitsquiggles/renderer/swing/BitSquiggle32RendererSwing.java
+            java/renderer-swing/bitsquiggles/renderer/swing/BitSquigglesRendererSwing.java
+      - name: Compile optional JavaFX renderer module
+        run: |
+          javac -d out/renderer-javafx --module-path out/core:/usr/share/openjfx/lib \
+            java/renderer-javafx/module-info.java \
+            java/renderer-javafx/bitsquiggles/renderer/javafx/BitSquigglesRendererJavaFX.java
       - name: Compile Java test and demo sources
         run: |
           javac -d out/test -cp out/core:out/renderer-swing \
-            java/core/bitsquiggles/BitSquiggle32Test.java \
-            java/core/bitsquiggles/BitSquigglesDemo.java
+            java/core/bitsquiggles/BitSquigglesCoreTest.java \
+            java/core/bitsquiggles/BitSquigglesDemo.java \
+            java/renderer-swing/bitsquiggles/renderer/swing/BitSquigglesRendererSwingTest.java
       - name: Run Java tests
-        run: java -Xmx512m -cp out/core:out/renderer-swing:out/test bitsquiggles.BitSquiggle32Test
+        run: |
+          java -Xmx512m -cp out/core:out/renderer-swing:out/test bitsquiggles.BitSquigglesCoreTest
+          java -cp out/core:out/renderer-swing:out/test bitsquiggles.renderer.swing.BitSquigglesRendererSwingTest
       - name: Verify generated example gallery
         run: java --module-path out/core --module io.github.maggo83.bitsquiggles/bitsquiggles.GalleryGenerator --check
       - name: Verify generated conformance fixtures
@@ -51,11 +64,8 @@ jobs:
           python3 micropython/test_bitsquiggle_renderer_framebuffer.py
           python3 micropython/test_bitsquiggle_renderer_lvgl.py
       - name: Run Dart core tests
-        run: dart dart/test_bitsquiggle32.dart
-      - name: Install Qt runtime libraries
         run: |
-          sudo apt-get update
-          sudo apt-get install --yes libegl1
+          dart dart/test_bitsquiggle32.dart
       - name: Run optional PyQt6 renderer tests
         run: |
           python3 -m pip install '.[pyqt6]'

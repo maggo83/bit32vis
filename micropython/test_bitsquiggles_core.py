@@ -471,7 +471,9 @@ def test_shared_fixture_under_cpython():
     if implementation != "cpython":
         return
 
-    fixture_path = os.path.join(os.path.dirname(__file__), "..", "fixtures", "v1.json")
+    fixture_path = os.path.join(
+        os.path.dirname(__file__), "..", "fixtures", "v1-32.json"
+    )
     with open(fixture_path, "r", encoding="utf-8") as fixture_file:
         fixture = json.load(fixture_file)
     check(fixture["schema"] == "bitsquiggles-conformance", "known fixture schema")

@@ -4,9 +4,10 @@ set -eu
 
 mkdir -p out/core
 javac -d out/core java/core/module-info.java \
-	java/core/bitsquiggles/BitSquiggle32.java \
+	java/core/bitsquiggles/BitSquiggles.java \
+	java/core/bitsquiggles/internal/BitSquigglesCore.java \
 	java/core/bitsquiggles/GalleryGenerator.java \
 	java/core/bitsquiggles/ConformanceFixtureGenerator.java
 java --module-path out/core --module io.github.maggo83.bitsquiggles/bitsquiggles.GalleryGenerator
 java --module-path out/core --module io.github.maggo83.bitsquiggles/bitsquiggles.ConformanceFixtureGenerator
-git add docs/examples fixtures/v1.json
+git add docs/examples fixtures/v1-32.json fixtures/v1-40.json

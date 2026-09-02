@@ -109,13 +109,12 @@ each must use left/right overlap fallback:
 
 ## Generated fixture ownership
 
-[fixtures/v1.json](../fixtures/v1.json) and the example assets in
-[docs/examples/](../docs/examples/) are Java-generated tracked BitSquiggle32
-outputs. After a relevant BitSquiggle32 change, validate them with the Java
-generators using `--check` as described in the
-[Java guide](../java/README.md#6-test-conformance). A BitSquiggle40 implementation
-must add generated cross-port fixture coverage before it can claim conformance.
-Target README files own their target-specific test commands.
+[fixtures/v1-32.json](../fixtures/v1-32.json),
+[fixtures/v1-40.json](../fixtures/v1-40.json), and the example assets in
+[docs/examples/](../docs/examples/) are Java-generated tracked outputs. After
+a relevant change, validate them with the Java generators using `--check` as
+described in the [Java guide](../java/README.md#6-test-conformance). Target
+README files own their target-specific test commands.
 
 ## Related
 

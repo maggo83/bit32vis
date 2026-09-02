@@ -5,6 +5,14 @@ rules are defined in [RELEASING.md](RELEASING.md).
 
 ## Unreleased
 
+- Renamed the 32-bit conformance fixture from `fixtures/v1.json` to
+  `fixtures/v1-32.json`, matching `fixtures/v1-40.json`.
+- Added BitSquiggle40 to the Java port, consolidated both widths in one
+  dependency-free internal core with neutral shared result types and
+  generators, and retained one Swing and one JavaFX renderer class as the
+  public width-specific entry points. Applications can access shared types
+  through their selected renderer import, and the BIP380 adapter is
+  deliberately unsuffixed.
 - Added BitSquiggle40 to the C99 port and consolidated both widths behind one
   width-selected implementation, shared result types, and generated packed
   mode tables. Added an allocation-free fill-rectangle renderer whose single
