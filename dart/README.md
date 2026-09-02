@@ -1,4 +1,4 @@
-# BitSquiggle32 for Dart and Flutter
+# BitSquiggles for Dart and Flutter
 
 ← Back to the [BitSquiggles project overview](../README.md). Read the
 [normative specification](../SPEC.md) for behavior shared by every port.
@@ -6,14 +6,18 @@
 ## 1. Status and scope
 
 This port provides a dependency-free Dart core and an optional Flutter Canvas
-renderer. Both files are standalone and vendorable. The core imports only Dart
+renderer. The source files are vendorable. The core imports only Dart
 standard libraries; Flutter is required only by the renderer.
+
+Both variants share `bitsquiggles_core.dart`. Flutter applications use the
+single `bitsquiggles_renderer_flutter.dart` façade. BitSquiggle32 inputs range
+through `0xffffffff`; BitSquiggle40 inputs range through `0xffffffffff`.
 
 ## 2. Include / install
 
 ### 2.1 Renderer-first Flutter integration (primary)
 
-Copy [bitsquiggle32.dart](bitsquiggle32.dart) and
+Copy [bitsquiggles_core.dart](bitsquiggles_core.dart) and
 [bitsquiggles_renderer_flutter.dart](bitsquiggles_renderer_flutter.dart) into
 the same source directory, then import the renderer as the complete façade:
 
@@ -21,15 +25,16 @@ the same source directory, then import the renderer as the complete façade:
 import 'bitsquiggles_renderer_flutter.dart' as bitsquiggles;
 ```
 
-The renderer exports the complete core API in addition to `renderRaster()`,
-`renderSmooth()`, and `BitSquiggleView`.
+The renderer exposes styles, result types, the BIP380 checksum adapter,
+`spec32()`/`spec40()`, `pixels32()`/`pixels40()`, both drawing modes, and
+`BitSquiggleView`. An application needs no second BitSquiggles import.
 
 ### 2.2 Core-only Dart integration
 
-For a headless or non-Flutter target, copy and import only the core:
+For a headless or non-Flutter target, copy and import only the shared core:
 
 ```dart
-import 'bitsquiggle32.dart' as bitsquiggles;
+import 'bitsquiggles_core.dart' as bitsquiggles;
 ```
 
 No package manifest or third-party dependency is needed.
@@ -40,9 +45,10 @@ Derive identity-bearing data in the core, then pass that canonical output to a
 renderer. Renderer operations intentionally never accept the identity input.
 
 ```dart
-final visual = bitsquiggles.spec(0x12345678);
-final grid = bitsquiggles.pixels(
-  0x12345678,
+final visual = bitsquiggles.spec32(0x12345678);
+final input40 = bitsquiggles.bip380ChecksumInput('89f8spxm');
+final grid = bitsquiggles.pixels40(
+  input40,
   bitsquiggles.BitSquiggleStyle.blackAndWhite,
 );
 ```
@@ -52,78 +58,88 @@ final grid = bitsquiggles.pixels(
 Inside a Flutter painter, render an integer-scaled grid without antialiasing:
 
 ```dart
-bitsquiggles.renderRaster(canvas, grid, pixelSize: 4);
+bitsquiggles.renderRaster40(canvas, grid, pixelSize: 4);
 ```
 
 Every source pixel becomes one whole `pixelSize` square. The resulting target
-area is `16 * pixelSize` by `22 * pixelSize` logical pixels.
+area is 16×22 source pixels for BitSquiggle32 and 22×22 for BitSquiggle40.
+The renderer validates the variant and complete grid before painting.
 
 ### 3.2 Optional smooth rendering
 
 Render an already-derived `VisualSpec` into a target `Size`:
 
 ```dart
-bitsquiggles.renderSmooth(canvas, visual, size);
+bitsquiggles.renderSmooth32(canvas, visual, size);
 ```
 
-The renderer scales the canonical 16×22 coordinates uniformly, centers them,
-uses the canonical `smoothBlobs()` decomposition, and submits the foreground as
-one non-zero-fill path so overlapping rounded rectangles have no seams.
+The renderer scales the selected variant's exact-raster coordinates uniformly,
+centers them, uses the canonical blob decomposition, and submits the foreground
+as one non-zero-fill path so overlapping rounded rectangles have no seams.
 
 For widget composition, `BitSquiggleView(visual: visual)` is a concise reusable
 `CustomPaint` wrapper.
 
 ## 4. Exposed API
 
-The core uses immutable Dart value types: `Edge`, `BitSquiggleColor`,
-`VisualSpec`, `PixelGrid`, and `SmoothBlob`.
+The core uses immutable Dart value types: `BitSquiggleDimensions`, `Edge`,
+`BitSquiggleColor`, `VisualSpec`, `PixelGrid`, and `SmoothBlob`.
 
 | Surface | Dart API |
 | --- | --- |
-| Dimensions | `rows`, `columns`, `edgeCount`, `pixelWidth`, `pixelHeight` |
-| Styles | `BitSquiggleStyle` and its `values` list |
-| Modes | `BitSquiggleMode` and its `values` list |
-| Conformance helpers | `edges()`, `mix32()`, `freeConnectionCount()`, `matchesMode()` |
-| Canonical output | `spec()`, `pixels()`, `smoothBlobs()` |
-| Flutter renderer | `renderRaster()`, `renderSmooth()`, `BitSquiggleView` |
+| Core dimensions | `dimensions(width)` |
+| Core diagnostics | `mix(width, input)`, `edges(width)`, class counts, `matchesMode(width, ...)`, `smoothBlobs(width, ...)` |
+| Core output | `spec(width, input)`, `pixels(width, input)` |
+| Identity adapter | `bip380ChecksumInput(checksum)` |
+| Flutter derivation | `spec32()`, `spec40()`, `pixels32()`, `pixels40()` |
+| Flutter rendering | `renderRaster32()`, `renderRaster40()`, `renderSmooth32()`, `renderSmooth40()`, `BitSquiggleView` |
 
-Inputs to `mix32()`, `spec()`, and `pixels()` are Dart integers in the inclusive
-range `0` through `0xffffffff`. Returned mixed and input values remain unsigned
-Dart integers in that range.
+Inputs and mixed values are unsigned Dart `int` values in the selected range.
+The core uses exact `BigInt` intermediates where 40-bit multiplication or the
+84-feature smooth working set would exceed a narrower integer representation.
+
+Every result owns fresh immutable lists. Render operations consume caller-owned
+Canvas, result, and size objects only for the duration of the call; the library
+retains none of them.
 
 ## 5. Test conformance
 
 With Dart on `PATH`, run from this directory:
 
 ```sh
-dart run test_bitsquiggle32.dart
+flutter pub get
+dart format --output=none --set-exit-if-changed bitsquiggles_core.dart bitsquiggles_renderer_flutter.dart test_bitsquiggles_core.dart test_bitsquiggles_web.dart test
+dart run test_bitsquiggles_core.dart
+dart compile js -O2 test_bitsquiggles_web.dart -o /tmp/bitsquiggles_web_test.js
+node /tmp/bitsquiggles_web_test.js
+flutter analyze bitsquiggles_core.dart bitsquiggles_renderer_flutter.dart test_bitsquiggles_core.dart test
+flutter test
 ```
 
-The dependency-free executable checks dimensions, all 58 ordered edges, class
-counts, the `0x89abcdef` golden vector, exact raster recovery, styles, invalid
-inputs, smooth blobs, and every Java-generated vector and style in
-[fixtures/v1.json](../fixtures/v1.json).
-
-For the optional renderer, analyze it in a Flutter project that contains both
-standalone source files:
-
-```sh
-flutter analyze bitsquiggles_renderer_flutter.dart
-```
+The dependency-free executable covers both generated fixtures, canonical
+dimensions and edges, class counts, mixers, assignment, fallback, the 40-bit
+marker and rotation separation, BIP380 conversion, colors, cells, exact raster
+recovery, smooth blob ordering, validation, uniqueness samples, and ownership.
+The non-published Flutter harness renders real Canvas images for both variants,
+checks every exact source pixel, exercises smooth output, rejects cross-width
+results, and verifies natural widget sizing.
+The compile-to-JavaScript smoke test verifies exact 40-bit arithmetic and the
+84-edge smooth working set in a web runtime.
 
 ## 6. Package / release notes
 
 The Dart port is source-only and not published to pub.dev. It follows the
-shared version policy in [RELEASING.md](../RELEASING.md).
+shared version policy in [RELEASING.md](../RELEASING.md). `pubspec.yaml` and
+`pubspec.lock` exist only to make renderer validation reproducible.
 
 ## 7. Limitations and compatibility
 
 | Surface | Target |
 | --- | --- |
-| Core | Maintained Dart SDK; no Flutter or third-party imports |
-| Renderer | Flutter Canvas and widgets |
+| Core | Dart 3 or newer; no Flutter or third-party imports |
+| Renderer | Stable Flutter Canvas and widgets |
 | Exact output | Integer logical-pixel scaling; device-pixel alignment remains the caller's responsibility |
-| Smooth output | Presentation-only; exact conformance remains the 16×22 raster |
+| Smooth output | Presentation-only; exact conformance remains the 16×22 or 22×22 raster |
 
 ## 8. License
 

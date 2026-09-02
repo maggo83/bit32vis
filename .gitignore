@@ -9,6 +9,12 @@ build/
 dist/
 *.egg-info/
 
+# JavaScript dependencies
+node_modules/
+
+# Dart tool state
+.dart_tool/
+
 # Editors and operating systems
 .vscode/
 .idea/

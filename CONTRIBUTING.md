@@ -14,11 +14,14 @@ Thanks for helping improve BitSquiggles.
 
 1. Propose behavior, format, or API changes in the owning normative chapter
   linked from [SPEC.md](SPEC.md) first.
-2. Keep every maintained core implementation conformant with `fixtures/v1.json`.
+2. Keep every maintained core implementation conformant with
+  `fixtures/v1-32.json` and `fixtures/v1-40.json`.
 3. Keep the core dependency-free; renderers and demos remain optional layers.
-4. Regenerate tracked gallery and fixture outputs when the Java generators require it.
+4. Regenerate and verify tracked generated artifacts according to their owning
+  port guides.
 5. Do not weaken the project’s safety boundary: BitSquiggles compares an
-   already-derived 32-bit value and is not authentication or authorization.
+  already-derived 32-bit or 40-bit value and is not authentication or
+  authorization.
 6. Follow the shared-version and release requirements in [RELEASING.md](RELEASING.md).
 
 ## Validate before opening a pull request

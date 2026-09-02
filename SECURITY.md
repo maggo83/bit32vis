@@ -1,8 +1,8 @@
 # Security Policy
 
 BitSquiggles renders a compact visual fingerprint from an already-derived
-32-bit value. It is a comparison aid, not an authentication or authorization
-mechanism — see [README.md](README.md) for the full safety boundary. Security
+32-bit or 40-bit value. It is a comparison aid, not an authentication or
+authorization mechanism — see [README.md](README.md) for the full safety boundary. Security
 issues in this project are typically about implementation correctness
 (for example, a raster or encoding bug that causes two different values to
 render identically across ports) rather than classic memory-safety or
@@ -28,7 +28,7 @@ Instead, report privately using one of the following channels:
 Include as much detail as practical:
 
 - Affected port(s) (C, Dart, Java, MicroPython, Python, web) and version/commit.
-- Steps to reproduce, including input values (e.g. the 32-bit fingerprint or
+- Steps to reproduce, including input values (e.g. the short fingerprint or
   seed data) and expected vs. actual rendered output.
 - Impact assessment, if known (e.g. two distinct values producing an
   indistinguishable visual output, a crash, or memory-safety issue in a

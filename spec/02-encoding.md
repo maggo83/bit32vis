@@ -1,24 +1,28 @@
-# BitSquiggle32 encoding
+# BitSquiggles encoding
 
-**Normative.** This chapter defines the complete unsigned uint32-to-connection-
-mask transformation, including the uniqueness proof. Read [the overview](01-overview.md)
-first. Presentation rules begin in [presentation](03-presentation.md).
+**Normative.** This chapter defines the complete unsigned-integer-to-connection-
+mask transformations for BitSquiggle32 and BitSquiggle40, including their
+uniqueness proof. Read [the overview](01-overview.md) first. Presentation rules
+begin in [presentation](03-presentation.md).
 
 ## Fixed dimensions, values, and ordering
 
-All input and mixer arithmetic is modulo $2^{32}$.
+Input and mixer arithmetic is modulo $2^w$, where $w$ is the variant's input
+width.
 
-| Item | Required value |
-| --- | ---: |
-| Grid rows | 7 |
-| Grid columns | 5 |
-| Horizontal edges | 28 |
-| Vertical edges | 30 |
-| Total edges | 58 |
-| Exact raster width | 16 |
-| Exact raster height | 22 |
+| Item | BitSquiggle32 | BitSquiggle40 |
+| --- | ---: | ---: |
+| Input width | 32 | 40 |
+| Grid rows | 7 | 7 |
+| Grid columns | 5 | 7 |
+| Horizontal edges | 28 | 42 |
+| Vertical edges | 30 | 42 |
+| Total edges | 58 | 84 |
+| Exact raster width | 16 | 22 |
+| Exact raster height | 22 | 22 |
 
-Rows are numbered `0…6` and columns `0…4`. A canonical edge is the tuple:
+Rows are numbered from `0` through `ROWS - 1` and columns from `0` through
+`COLUMNS - 1`. A canonical edge is the tuple:
 
 ```text
 (startRow, startColumn, endRow, endColumn)
@@ -38,9 +42,38 @@ edge exists. Connection arrays and bit strings use this order.
 A cell is active if and only if at least one selected edge is incident to it.
 Cells do not carry independent data bits.
 
-## Bijective mixer
+## BIP380 checksum conversion
 
-Given `input`, calculate:
+BitSquiggle40 provides a conversion helper for the eight characters following
+the `#` separator in a BIP380 output descriptor. The checksum character set and
+its index order are:
+
+```text
+qpzry9x8gf2tvdw0s3jn54khce6mua7l
+```
+
+The helper accepts exactly eight characters from this set. It does not accept
+the `#` separator or any descriptor text. Let `index(character)` be the
+zero-based position in the character set above. Starting with `value = 0`,
+process the checksum from left to right:
+
+```text
+value = (value << 5) OR index(character)
+```
+
+After eight characters, return `value` as the unsigned 40-bit BitSquiggle40
+input. Leading `q` characters contribute zero-valued high bits and must not be
+discarded during length validation. Reject every input whose length is not
+exactly eight characters or which contains a character outside the set.
+
+This helper converts an already-present checksum representation. It does not
+calculate a checksum and cannot verify one without the associated descriptor.
+
+## Bijective mixers
+
+### BitSquiggle32 mixer
+
+Given `input`, calculate modulo $2^{32}$:
 
 ```text
 mixed = input + 0x9e3779b9
@@ -55,10 +88,26 @@ implementation language does not overflow naturally.
 Both multipliers are odd, addition is reversible, and each XOR-shift is
 invertible. The complete mixer is therefore a permutation of the 32-bit domain.
 
+### BitSquiggle40 mixer
+
+Given `input`, calculate modulo $2^{40}$:
+
+```text
+mixed = input + 0xb97f4a7c15
+mixed = (mixed XOR (mixed >>> 20)) × 0xd7ed558ccd
+mixed = (mixed XOR (mixed >>> 15)) × 0xfe1a85ec53
+mixed =  mixed XOR (mixed >>> 20)
+```
+
+Both multipliers are odd, addition is reversible, and each XOR-shift is
+invertible. The complete mixer is therefore a permutation of the 40-bit domain.
+Mask intermediate results to the variant width where the implementation
+language does not overflow at that width naturally.
+
 ## Connection classes and copy templates
 
-Each template labels the 7×5 physical cells. An unprimed label identifies a
-source cell; a primed label is a copy of that source.
+Each BitSquiggle32 template labels the 7×5 physical cells. An unprimed label
+identifies a source cell; a primed label is a copy of that source.
 
 For every physical edge:
 
@@ -128,7 +177,58 @@ Free connection classes: **33**. The final row extends the copied diagonal
 sequence and mirrors the top row in reverse. This remains a copy template, not
 a geometric reflection of the non-square rectangle.
 
+### BitSquiggle40 geometric templates
+
+BitSquiggle40 defines each template by an involution on a cell coordinate
+`(row, column)`. For each physical edge, transform both endpoints and restore
+canonical endpoint order. The connection-class key is the lexicographically
+smaller of the original canonical edge and the transformed canonical edge.
+Sort connection classes by that key.
+
+| Mode | Cell transform | Free classes |
+| --- | --- | ---: |
+| Left/right (`A\|`) | `(row, 6 - column)` | 45 |
+| Top/bottom (`A-`) | `(6 - row, column)` | 45 |
+| Half-turn (`A+`) | `(6 - row, 6 - column)` | 42 |
+| Slash reflection (`A/`) | `(6 - column, 6 - row)` | 42 |
+
+The slash transform is reflection across the geometric diagonal running from
+the lower-left cell to the upper-right cell.
+
+### BitSquiggle40 orientation marker and usable classes
+
+BitSquiggle40 reserves the four edges incident to the center cell `(3,3)`:
+
+```text
+up    = (2,3,3,3)
+left  = (3,2,3,3)
+right = (3,3,3,4)
+down  = (3,3,4,3)
+```
+
+The `up` edge is selected in every final mask. The `left`, `right`, and `down`
+edges are clear. These four values are the orientation marker and do not carry
+input bits.
+
+For each mode, exclude every connection class containing at least one reserved
+edge from data assignment. Set every physical edge in an excluded class clear
+before applying the orientation marker. Sort the remaining usable classes by
+the same connection-class key as the complete family.
+
+| Mode | Complete classes | Excluded classes | Usable classes |
+| --- | ---: | ---: | ---: |
+| Left/right (`A\|`) | 45 | 3 | 42 |
+| Top/bottom (`A-`) | 45 | 3 | 42 |
+| Half-turn (`A+`) | 42 | 2 | 40 |
+| Slash reflection (`A/`) | 42 | 2 | 40 |
+
+The orientation marker is applied only after candidate construction,
+canonical overlap handling, and fallback selection. Family membership and
+canonical overlap tests operate on the data mask before the marker is applied.
+
 ## Preferred modes and class-bit assignment
+
+### BitSquiggle32 assignment
 
 Bits `31…30` of `mixed` select one of four preferred modes:
 
@@ -163,24 +263,52 @@ Mode 0 is different: assign all 32 bits of `mixed`, most significant first,
 directly to the 32 left/right classes. This is a bijection onto the complete
 default family and is also the fallback encoding.
 
+### BitSquiggle40 assignment
+
+Bits `39…38` of `mixed` select the preferred mode in the same mode order.
+Bits `37…0` are the 38-bit payload.
+
+For preferred modes 1 through 3, assign payload bits most significant first and
+repeat from the beginning for remaining classes:
+
+```text
+classBit[i] = payloadBit[37 - (i modulo 38)]
+```
+
+Every non-default family has at least 38 usable classes, so every payload is
+represented injectively. No capacity fallback is needed.
+
+For preferred mode 0 and every fallback, assign all 40 bits of `mixed` most
+significant first and repeat from the beginning for any remaining usable classes:
+
+```text
+classBit[i] = mixedBit[39 - (i modulo 40)]
+```
+
+The first 40 usable classes preserve the complete mixed value injectively. The
+two repeated left/right classes are deterministic geometry and carry no
+additional information. The half-turn and slash-reflection families have 40
+usable classes, two more than their 38-bit payloads.
+
 ## Family membership, canonical priority, and fallback
 
 Mode families overlap. A family label cannot disambiguate them because it is
 not part of the visible geometry. Apply this priority rule to every candidate
 with preferred mode `i > 0`:
 
-1. expand its classes into the canonical 58-edge mask;
-2. test that mask against every complete family with index less than `i`;
+1. expand its classes into the variant's canonical edge mask;
+2. test that mask against every earlier encoding family: the complete family
+   for BitSquiggle32 or the restricted data family for BitSquiggle40;
 3. accept it only when no earlier family matches;
-4. otherwise encode the complete `mixed` value using mode 0 and set `fallback`
-   to true.
+4. otherwise encode the complete `mixed` value using the variant's mode-0
+   assignment and set `fallback` to true.
 
 An accepted candidate has `actualMode = preferredMode` and `fallback = false`.
 A rejected candidate has `actualMode = A|` and `fallback = true`. Preferred
 mode 0 directly uses `A|` and is not considered fallback.
 
-Capacity fallback from the preceding section is applied in addition to this
-overlap rule.
+BitSquiggle32 applies its capacity fallback in addition to this overlap rule.
+BitSquiggle40 has no capacity fallback.
 
 ### Exact membership test
 
@@ -194,10 +322,12 @@ Expansion is:
 edge[e] = classBit[class(e)]
 ```
 
-The mask belongs to that complete family if and only if all occurrences in
-each connection class are equal. One representative occurrence can be compared
-with all remaining occurrences. Singleton classes impose no constraint. The
-test is exact and linear in the 58 physical edges.
+For BitSquiggle32, the mask belongs to that complete family if and only if all
+occurrences in each connection class are equal. For a BitSquiggle40 data mask,
+every edge in an excluded class must be clear and all occurrences in each usable
+class must be equal. One representative occurrence can be compared with all
+remaining occurrences. Singleton classes impose no constraint. The test is
+exact and linear in the variant's physical edge count.
 
 It is necessary to test all earlier families, not only an adjacent or
 higher-index family: the earliest family owns every overlap in which it
@@ -205,17 +335,19 @@ participates.
 
 ### Uniqueness proof
 
-Let `M` be the bijective mixer and `Fi` the complete mask family for mode `i`.
+Let `M` be the variant's bijective mixer and `Fi` its encoding family for mode
+`i`: the complete mask family for BitSquiggle32 or the restricted data-mask
+family for BitSquiggle40.
 
-1. Mode-0 and fallback outputs encode all 32 mixed bits injectively in `F0`.
+1. Mode-0 and fallback outputs encode every mixed bit injectively in `F0`.
 2. Every accepted non-default output is explicitly outside `F0`, so it cannot
    equal a mode-0 or fallback output.
-3. Within top/bottom or slash copy, different inputs selecting that mode have
-   different 30-bit payloads, all of which are present in the first 30 classes.
-4. An accepted half-turn output has payload bit 0 equal to zero. Its remaining
-   29 payload bits are present in its 29 classes; different accepted half-turn
-   inputs therefore produce different masks. Half-turn inputs with payload bit
-   0 equal to one use the injective default fallback.
+3. Within every non-default family with sufficient capacity, different inputs
+   selecting that mode have different payloads, all of which are present in the
+   first payload-width classes.
+4. BitSquiggle32 half-turn candidates use the capacity rule above: accepted
+   candidates preserve bits `29…1`, while candidates with payload bit 0 equal
+   to one use the injective default fallback.
 5. For accepted modes `i < j`, every mode-`i` output belongs to `Fi`, while
    mode `j` rejects every candidate belonging to `Fi`. Their accepted outputs
    cannot coincide.
@@ -227,10 +359,22 @@ input1 != input2  =>  edgeMask1 != edgeMask2
 ```
 
 The exact raster is also injective because [the exact raster](04-exact-raster.md)
-assigns dedicated bridge pixels from which all 58 edge bits can be recovered.
+assigns dedicated bridge pixels from which every edge bit can be recovered.
 Color and metadata are not used in either argument.
 
-For symbolic analysis, each complete family may equivalently be represented as
+For BitSquiggle40, let `R` rotate an edge mask clockwise by 90 degrees. Every
+valid final mask has marker values `(up,left,right,down) = (1,0,0,0)`. For
+`k` equal to 1, 2, or 3, `R^k` moves the selected marker edge to another
+reserved position, so the rotated mask cannot equal any valid final mask.
+Together with fixed-orientation injectivity, this establishes:
+
+```text
+input1 != input2  =>  edgeMask1 != rotate(edgeMask2, k × 90°)
+```
+
+for `k` equal to 0, 1, 2, or 3.
+
+For symbolic analysis, each encoding family may equivalently be represented as
 the affine binary map:
 
 ```text

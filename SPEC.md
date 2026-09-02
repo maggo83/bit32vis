@@ -1,19 +1,20 @@
-# BitSquiggles / BitSquiggle32 Specification
+# BitSquiggles Specification
 
 ← Back to the [BitSquiggles project overview](README.md), including project
 status, safety boundaries, implementation guides, and license.
 
 **Normative.** This index and the linked chapters together are the technical
-source of truth for BitSquiggle32. Project motivation, audience, history, and
-design trade-offs belong in [README.md](README.md). Target-specific names,
-installation, integration, and test commands belong in the port guides.
+source of truth for BitSquiggle32 and BitSquiggle40. Project motivation,
+audience, history, and design trade-offs belong in [README.md](README.md).
+Target-specific names, installation, integration, and test commands belong in
+the port guides.
 
 ## Contract at a glance
 
-BitSquiggle32 maps one unsigned 32-bit integer to a deterministic visual
-specification. Its identity-bearing output is a 58-bit canonical connection
-mask over a fixed grid. The exact 16×22 binary raster preserves that mask
-without loss.
+BitSquiggle32 and BitSquiggle40 map unsigned integers of their named widths to
+deterministic visual specifications. Their identity-bearing outputs are binary
+canonical connection masks over fixed grids. The exact binary rasters preserve
+those masks without loss.
 
 For conforming implementations:
 
@@ -24,8 +25,9 @@ unequal inputs => unequal connection masks and exact rasters
 
 This is a geometry and exact-raster guarantee. It does not guarantee that
 people can distinguish every pair after arbitrary scaling, smoothing, display
-degradation, or brief observation. The caller supplies the uint32 value;
-BitSquiggle32 does not derive Bitcoin fingerprints or define a byte order.
+degradation, or brief observation. The caller supplies the unsigned integer.
+BitSquiggles does not derive Bitcoin fingerprints, descriptor checksums, or
+other protocol values, and it does not define a byte order.
 
 ## Normative chapters
 
@@ -35,9 +37,9 @@ normative owner of the detailed rules in its subject.
 | Chapter | Purpose | Read when |
 | --- | --- | --- |
 | [Overview](spec/01-overview.md) | Observable contract and processing model | Starting an implementation or evaluating the guarantee |
-| [Encoding](spec/02-encoding.md) | Dimensions, mixer, templates, assignment, canonicalization, and uniqueness proof | Implementing the uint32-to-mask transformation |
+| [Encoding](spec/02-encoding.md) | Dimensions, mixers, templates, assignment, canonicalization, and uniqueness proof | Implementing an integer-to-mask transformation |
 | [Presentation](spec/03-presentation.md) | Active cells, styles, color derivation, and sRGB conversion | Implementing non-binary presentation |
-| [Exact raster](spec/04-exact-raster.md) | The lossless 16×22 binary output | Drawing to monochrome or pixel-grid targets |
+| [Exact raster](spec/04-exact-raster.md) | Lossless binary output for both grid sizes | Drawing to monochrome or pixel-grid targets |
 | [Smooth output](spec/05-smooth-output.md) | Smooth-rendering constraints and canonical blobs | Adding an antialiased renderer |
 | [API contract](spec/06-api.md) | Required core operations and renderer façade | Designing a core or renderer public surface |
 | [Conformance](spec/07-conformance.md) | Required checks, vector, and generated-output ownership | Verifying or releasing a port |
@@ -55,7 +57,7 @@ graph TD
   S --> C
   A --> C
   A --> G[Port integration guides]
-  C --> F[fixtures/v1.json]
+  C --> F[fixtures/v1-32.json]
 ```
 
 ## Task-oriented reading paths
@@ -75,7 +77,9 @@ The words **must**, **must not**, **should**, and **may** in the normative
 chapters indicate requirement strength. A conforming implementation satisfies
 all **must** and **must not** statements.
 
-The versioned cross-port fixture is [fixtures/v1.json](fixtures/v1.json).
+The versioned cross-port fixtures are
+[fixtures/v1-32.json](fixtures/v1-32.json) and
+[fixtures/v1-40.json](fixtures/v1-40.json).
 Generated gallery examples are in [docs/examples/](docs/examples/). Their Java
 generators and validation commands are owned by
 [the conformance chapter](spec/07-conformance.md) and the

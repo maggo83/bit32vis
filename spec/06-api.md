@@ -1,75 +1,98 @@
-# BitSquiggle32 API contract
+# BitSquiggles API and implementation contract
 
-**Normative.** This chapter defines the public core and renderer surface.
-Shared semantics depend on [encoding](02-encoding.md), [presentation](03-presentation.md),
-and the output chapters. Each port guide owns target-language names, signatures,
-containers, validation, ownership, and helpers.
+**Normative.** This chapter distinguishes the capabilities required to verify
+a conforming implementation from the smaller public interface required by an
+application. Shared semantics depend on [encoding](02-encoding.md),
+[presentation](03-presentation.md), and the output chapters. Each port guide
+owns target-language signatures, containers, validation, ownership, and
+renderer details.
 
-## Core API contract
+## Conformance implementation contract
 
-Every core exposes these public operations using its language's conventional
-naming, arguments, return values, and error reporting.
+Every port must implement the capabilities in this section for each supported
+width. They must be reachable by the port's conformance harness, but they do
+not have to be public application APIs. A port may keep all of them internal or
+make some of them public when that is simpler and does not add duplicated,
+complicated, or bloated code.
 
-### Application-facing operations
+The operation names below are descriptive rather than mandatory public names.
+Where the target language permits it efficiently, shared core operations
+should accept the width as a parameter or variant descriptor instead of
+duplicating the width in function names. Width-specific internal functions are
+appropriate when required by numeric semantics, toolchain constraints, or a
+measured size or runtime benefit.
 
-| Operation | Result |
+### Required capabilities
+
+| Capability | Result |
 | --- | --- |
-| `spec(input[, style])` | canonical visual specification |
-| `pixels(input[, style])` | exact pixel grid and its colors |
-| `smoothBlobs(connections)` | ordered canonical smooth blobs |
+| `mix(width, input)` | bijective mixed value at the selected width |
+| `edges(width)` | 58 or 84 canonical edges in [encoding order](02-encoding.md#fixed-dimensions-values-and-ordering) |
+| `freeConnectionCount(width, mode)` | independent connection-class count |
+| `usableConnectionCount(width, mode)` | data-bearing connection-class count |
+| `matchesMode(width, connections, mode)` | complete-family membership |
+| `spec(width, input[, style])` | canonical visual specification |
+| `pixels(width, input[, style])` | exact pixel grid and its colors |
+| `smoothBlobs(width, connections)` | ordered canonical smooth blobs |
+| `bip380ChecksumInput(checksum)` | BitSquiggle40 input from exactly eight BIP380 checksum characters |
 
-`spec()` is pure: it derives the mixed input, connections, active cells, colors,
-style, preferred and actual modes, fallback state, luminance index, and polarity
-metadata. `pixels()` is also pure and derives the exact 16×22 binary raster and
-its colors from the same input and style. Neither operation draws anything.
-`smoothBlobs()` is also pure; it consumes a canonical connection mask and
-returns the presentation-only ordered blob decomposition from
-[smooth output](05-smooth-output.md#canonical-blob-extraction).
+The implementation must also provide the selected variant's rows, columns,
+edge count, pixel width, and pixel height; the four styles Standard, High
+contrast, Monochrome, and Black and white; and mode labels `A|`, `A-`, `A+`,
+and `A/`.
 
-### Public conformance helpers
+`spec()` is pure: it derives the mixed input, connections, active cells,
+colors, style, preferred and actual modes, fallback state, luminance index,
+and polarity metadata. `pixels()` is also pure and derives the variant's exact
+binary raster and colors from the same input and style. `smoothBlobs()` is pure
+and returns the presentation-only ordered decomposition from
+[smooth output](05-smooth-output.md#canonical-blob-extraction). None of these
+operations draws anything.
 
-| Operation | Result |
-| --- | --- |
-| `mix32(input)` | bijective 32-bit mixed value |
-| `edges()` | 58 canonical edges in [encoding order](02-encoding.md#fixed-dimensions-values-and-ordering) |
-| `freeConnectionCount(mode)` | independent connection-class count |
-| `matchesMode(connections, mode)` | complete-family membership |
+The BIP380 helper has the validation and conversion behavior defined in
+[BIP380 checksum conversion](02-encoding.md#bip380-checksum-conversion). It
+does not accept a complete descriptor and does not verify or derive its
+checksum. It is required only for implementations that support BitSquiggle40.
 
-Every core also exposes `ROWS`, `COLUMNS`, `EDGE_COUNT`, `PIXEL_WIDTH`, and
-`PIXEL_HEIGHT`; the four styles (Standard, High contrast, Monochrome, and Black
-and white); and mode labels `A|`, `A-`, `A+`, and `A/`. These helpers support
-diagnostics and conformance; applications normally use the preceding
-application-facing operations.
+## Application renderer contract
 
-## Renderer contract
+An application uses a selected renderer as its only BitSquiggles import or
+include. The renderer may depend on an internal or separately compiled core,
+but an integrator must not need another BitSquiggles import or include to name
+styles and result types or to perform the supported workflow. A renderer may
+provide those types by re-export, inheritance, an included declaration, or
+another efficient mechanism conventional for the target language; it should
+not duplicate model definitions solely to satisfy this rule.
 
-Optional target renderers append a framework identifier to the
-`BitSquiggle32Renderer` root, using the target language's normal naming style.
-Examples are Java `BitSquiggle32RendererSwing`, JavaScript
-`bitsquiggle32-renderer-canvas`, Python `bitsquiggle32_renderer_pillow`, and
-MicroPython `bitsquiggle32_renderer_lvgl`. A renderer is optional and does not
-change core identity or the [exact raster](04-exact-raster.md) contract.
+### Required public surface
 
-### Renderer public surface
+A renderer that supports both widths exposes these width-explicit operations:
 
-| Surface | Requirement | Input | Result or constraint |
+| Operation | Requirement | Input | Result or constraint |
 | --- | --- | --- | --- |
-| Complete declared core API | Required | The core operations, conformance helpers, and public constants | Expose them through the renderer entry point with unchanged behavior and values. |
-| `renderRaster()` | Optional | Canonical pixel grid | Paint every grid element as an exact whole target pixel or integer-scaled square. It must not accept an identity input. |
-| `renderSmooth()` | Optional | Canonical visual specification | Render the smooth presentation according to [smooth output](05-smooth-output.md); antialiasing must not close an unselected connection. |
-| Target-specific helpers | Optional | Target-defined | May provide convenience operations without changing the required core or renderer operations. |
+| `spec32`, `spec40` | Required | Identity and optional style | Return the canonical visual specification. |
+| `pixels32`, `pixels40` | Required | Identity and optional style | Return the exact pixel grid and its colors. |
+| `renderRaster32`, `renderRaster40` | Required when exact rendering is supported | Canonical pixel grid | Paint every grid element as an exact whole target pixel or integer-scaled square. It must not accept an identity input. |
+| `renderSmooth32`, `renderSmooth40` | Required when smooth rendering is supported | Canonical visual specification | Render according to [smooth output](05-smooth-output.md); antialiasing must not close an unselected connection. |
+| `bip380ChecksumInput` | Required for BitSquiggle40 | Eight BIP380 checksum characters | Return the corresponding 40-bit input. |
 
-Every renderer **must** expose at least a smooth or a raster rendering operation.
-Every renderer **must** expose the complete declared public core API through
-its own public entry point, using the target language's conventional façade or
-re-export mechanism, and add its renderer-specific operations. An integrator
-can therefore use the selected renderer as the single application entry point
-for `spec()`, `pixels()`, and rendering. Re-exported operations and constants
-must retain the core's behavior and values. This does not change operation
-ownership, source dependencies, or the requirement that `renderRaster()`
-consumes a canonical pixel grid rather than an identity input.
+Use the target language's conventional spelling while preserving the `32` and
+`40` suffixes. The BIP380 helper is deliberately unsuffixed because its input
+domain already identifies it as BitSquiggle40-only. A renderer for only one
+width exposes the applicable suffixed operations.
 
-Each port guide owns exact exported names, signatures, container types, input
+Every renderer must provide at least exact or smooth rendering for each width
+it supports. Diagnostic operations such as mixers, edge enumeration, family
+matching, capacities, dimensions, and smooth-blob extraction are not part of
+the required application surface. They may remain internal or be available
+through a separately public core when that is useful and inexpensive.
+
+The renderer entry point owns identity adaptation, canonical output, and
+rendering. This does not change the requirement that `renderRaster32/40`
+consume a canonical pixel grid and `renderSmooth32/40` consume a canonical
+visual specification rather than accepting identity inputs directly.
+
+Each port guide owns exact exported signatures, container types, input
 validation, ownership, and target-specific helpers.
 
 ## Related

@@ -1,28 +1,34 @@
 # BitSquiggles
 
-BitSquiggles is an experimental visual encoding for comparing two already-derived
-32-bit fingerprints. It turns the same value into the same compact pattern on
-different devices, including devices with very small or monochrome displays.
+BitSquiggles is an experimental family of visual encodings for comparing two
+already-derived short fingerprints or checksums. It turns the same value into
+the same compact pattern on different devices, including devices with very
+small or monochrome displays.
+
+BitSquiggle32 accepts a 32-bit value and uses a 7×5 grid. BitSquiggle40 accepts
+a 40-bit value and uses a 7×7 grid.
 
 The intended interaction is a side-by-side check: show the pattern on both
 devices and look for a difference. A typical example is comparing a BIP-32
 master-key fingerprint shown by a hardware wallet with the fingerprint shown
-by its companion application.
+by its companion application (32bit variant) or eight 5-bit characters of a
+BIP380 descriptor checksum (40bit variant).
 
-The project provides dependency-free reference implementations for Java 17,
-MicroPython-compatible Python, JavaScript, C99, and Dart. The algorithm and
+The project provides dependency-free BitSquiggle32 and BitSquiggle40 reference
+implementations for Java 17, MicroPython-compatible Python, JavaScript, C99,
+and Dart. The algorithms and
 conformance requirements are defined in [SPEC.md](SPEC.md); this README
 deliberately stays at the project and design-rationale level.
 
 ## Rendered examples
 
-Each sheet below is generated directly from the Java reference implementation.
+Each BitSquiggle32 sheet below is generated directly from the Java reference implementation.
 The four columns are Standard, High Contrast, Monochrome, and Black and White.
 Every column contains an 80×110 smooth rendering above its native, unscaled
 16×22 pixel raster. The color changes between styles; the encoded geometry does
 not.
 
-**Try any value in the [interactive playground](https://maggo83.github.io/BitSquiggles/).**
+**Try either variant in the [interactive playground](https://maggo83.github.io/BitSquiggles/).**
 It runs entirely in the browser and creates a shareable link for each value.
 
 | Input | Representative behavior | Rendered styles and native rasters |
@@ -34,28 +40,38 @@ It runs entirely in the browser and creates a shareable link for each value.
 | `12345678` | Sparse left/right output (`A\|`) | ![Input 12345678 in Standard, High Contrast, Monochrome, and Black and White](docs/examples/12345678.svg) |
 | `ffffffff` | Denser left/right output (`A\|`) | ![Input ffffffff in Standard, High Contrast, Monochrome, and Black and White](docs/examples/ffffffff.svg) |
 
+BitSquiggle40 uses a square 7x7 graph and a 22x22 exact raster. Its fixed
+center marker makes the intended orientation explicit.
+
+| 40-bit input | Rendered styles and native rasters |
+| --- | --- |
+| `0000000000` | ![40-bit input 0000000000](docs/examples/40-0000000000.svg) |
+| `0000000001` | ![40-bit input 0000000001](docs/examples/40-0000000001.svg) |
+| `39527804db` | ![BIP380 checksum input 39527804db](docs/examples/40-39527804db.svg) |
+| `ffffffffff` | ![40-bit input ffffffffff](docs/examples/40-ffffffffff.svg) |
+
 ## Quick start
 
 Choose the target language in the [reference implementation guides](#reference-implementation-guides).
-Each guide is the single source for its installation, core API, exact-raster,
+Each guide is the single source for its installation, application API, exact-raster,
 optional-renderer, and test instructions.
 
 ## Why this project exists
 
-Eight hexadecimal digits are compact but tiring to compare, especially on a
-small screen. BitSquiggles explores whether a structured visual can make accidental
-mismatches easier to notice without requiring color, antialiasing, or a large
-display.
+Eight hexadecimal digits or eight descriptor-checksum characters are compact
+but tiring to compare, especially on a small screen. BitSquiggles explores
+whether a structured visual can make accidental mismatches easier to notice
+without requiring color, antialiasing, or a large display.
 
 It is useful when all of the following are true:
 
-- a protocol or application already has a meaningful 32-bit fingerprint;
+- a protocol or application already has a meaningful 32-bit or 40-bit value;
 - the same value can be displayed independently in two places;
 - a person can inspect both displays at roughly the same time;
 - the goal is convenient detection of accidental mismatch.
 
-BitSquiggles does not decide what should be fingerprinted. Deriving the correct
-32-bit input remains the caller's responsibility.
+BitSquiggles does not decide what should be fingerprinted or checksummed.
+Deriving and converting the correct input remains the caller's responsibility.
 
 ## Intended audience and uses
 
@@ -76,33 +92,36 @@ identity in a large collection.
 
 ### Not protection against a deliberate attacker
 
-The input contains only 32 bits. A targeted collision is computationally
-feasible, regardless of how those bits are displayed. BitSquiggles is not a
-cryptographic authentication mechanism and must not be treated as one.
+The input contains only 32 or 40 bits. A targeted collision may be feasible,
+regardless of how those bits are displayed. BitSquiggles is not a cryptographic
+authentication mechanism and must not be treated as one.
 
-A random value matches one fixed 32-bit value with probability $1/2^{32}$.
-That may be useful for detecting accidents, but it is not an adequate security
-boundary against an attacker who can search for inputs.
+A random value matches one fixed value with probability $1/2^{32}$ for
+BitSquiggle32 or $1/2^{40}$ for BitSquiggle40. That may be useful for detecting
+accidents, but it is not an adequate security boundary against an attacker who
+can search for inputs.
 
 ### Not a replacement for complete identifiers
 
 Do not reduce a Bitcoin address, payment destination, public key, transaction,
 or other long identifier to 32 bits and then use BitSquiggles as the authorization
-decision. Different identifiers can have the same 32-bit fingerprint and will
-then correctly produce the same pattern.
+decision. Different identifiers can have the same short fingerprint or checksum
+and will then correctly produce the same pattern.
 
 Payment destinations and other security-sensitive identifiers still require
 an appropriate exact or authenticated comparison of the complete value. A
-BitSquiggle32 can only be an additional cue.
+BitSquiggle can only be an additional cue.
 
 ### Not a hash, checksum, or fingerprint derivation function
 
-BitSquiggle32 accepts an unsigned 32-bit value. It does not:
+Each BitSquiggle variant accepts an unsigned integer of its named width. It does not:
 
 - accept arbitrary strings or byte arrays;
 - derive BIP-32 or other protocol fingerprints;
+- calculate or verify BIP380 descriptor checksums; the BitSquiggle40 helper
+  only converts eight already-derived checksum characters to an integer;
 - prove possession of a key;
-- add information that was discarded before the value reached BitSquiggle32;
+- add information that was discarded before the value reached the encoder;
 - provide cryptographic collision resistance.
 
 ## Design assumptions and choices
@@ -129,15 +148,15 @@ low-resolution displays.
 
 ### Diffusion must not discard information
 
-Nearby numeric inputs should not lead to nearby-looking outputs. BitSquiggle32 uses
-a reversible 32-bit mixer rather than a many-to-one hash: it improves avalanche
-while preserving the size and uniqueness of the input domain.
+Nearby numeric inputs should not lead to nearby-looking outputs. Each variant
+uses a reversible width-matched mixer rather than a many-to-one hash: it
+improves avalanche while preserving the size and uniqueness of the input domain.
 
 ### Invisible metadata cannot establish uniqueness
 
 The internal copy-family choice is not printed into the pattern, and different
-families can produce the same geometry. BitSquiggle32 resolves such overlaps by a
-canonical priority rule and a full-capacity fallback. Uniqueness is claimed for
+families can produce the same geometry. Both variants resolve such overlaps by
+a canonical priority rule and a full-capacity fallback. Uniqueness is claimed for
 the visible connection geometry, not for a hidden mode label.
 
 ### A tiny exact rendering is the portability baseline
@@ -146,6 +165,16 @@ The conformance representation is a fixed binary raster with no antialiasing.
 Each connection has dedicated pixels, allowing the abstract geometry to be
 recovered from the raster. Larger smooth renderings are presentation options;
 they do not redefine the encoded value.
+
+### Orientation is explicit
+
+Canonical output has a top and a left edge. BitSquiggle40 reserves the four
+connections incident to its center cell as an orientation marker: the upward
+connection is selected and the other three are clear. Consequently, rotating a
+BitSquiggle40 by 90, 180, or 270 degrees cannot turn it into the valid pattern
+for a different input. This does not make rotated output canonical, and it does
+not provide the same protection against reflection or arbitrary coordinate
+permutations.
 
 ### Reference implementations should be easy to audit and port
 
@@ -176,25 +205,28 @@ for the critique and pointers to existing other approaches like LifeHash!
 
 ## Status
 
-BitSquiggles is **experimental**. The project has tagged its first reference
-release, `v0.1.0-beta.1`, so beta testers and potential collaborators have a
-stable, citable point to integrate against. This is a beta: no further core
-changes are planned imminently, but encoding details (for example the
-diagonal `/` copy family) may still evolve based on integration feedback
-before a stable 1.0.
+BitSquiggles is **experimental**. The project has tagged its first
+BitSquiggle32 reference release, `v0.1.0-beta.1`, so beta testers and potential
+collaborators have a stable, citable point to integrate against. This is a
+beta: encoding details may still evolve based on integration feedback before a
+stable 1.0.
 
 Current state:
 
+- BitSquiggle32 and BitSquiggle40 share one normative specification structure;
 - Java 17, MicroPython-compatible Python, JavaScript, C99, and Dart
-  implementations are present;
+  implementations are present for both variants;
+- Java-generated fixtures cover both variants for cross-port conformance;
 - each implementation includes a dependency-free test suite;
-- the implementations share documented conformance vectors;
+- the BitSquiggle32 implementations share a documented conformance vector and
+  generated fixture;
 - uniqueness of the canonical connection mask is supported by a structural
   proof, while tests sample the implementation over large input sets;
 - the Java implementation includes an interactive Swing demo;
 - optional Swing/Java2D and JavaFX desktop renderers are available;
 - the Python port includes an optional PyQt6 exact-raster and smooth renderer;
 - the MicroPython port includes optional LVGL exact-raster and smooth renderers;
+- the C99 port includes a generic fill-rectangle exact-raster renderer;
 - the Dart port includes an optional Flutter exact-raster and smooth renderer;
 - proof-of-concept integrations have been verified in simulators for Sparrow,
   Bitcoin Safe, Bull Bitcoin, BitBox, ColdCard, and Specter, and the Specter
@@ -247,7 +279,8 @@ it manually after changing rendering behavior, run:
 ```bash
 mkdir -p out/core
 javac -d out/core java/core/module-info.java \
-  java/core/bitsquiggles/BitSquiggle32.java \
+  java/core/bitsquiggles/BitSquiggles.java \
+  java/core/bitsquiggles/internal/BitSquigglesCore.java \
   java/core/bitsquiggles/GalleryGenerator.java \
   java/core/bitsquiggles/ConformanceFixtureGenerator.java
 java --module-path out/core --module io.github.maggo83.bitsquiggles/bitsquiggles.GalleryGenerator
@@ -287,41 +320,58 @@ AGENTS.md                  concise guide for coding agents
 RELEASING.md               shared versioning and release procedure
 CHANGELOG.md               released and planned change history
 java/core/
-  module-info.java          Headless core JPMS descriptor
+  module-info.java          Shared model/internal implementation descriptor
   bitsquiggles/
-    BitSquiggle32.java       Java reference implementation
-    BitSquiggle32Test.java   Java conformance and property tests
+    BitSquiggles.java        Neutral public renderer model
+    internal/BitSquigglesCore.java
+                            Internal generic 32/40-bit reference implementation
+    BitSquigglesCoreTest.java Both-width conformance and property tests
     BitSquigglesDemo.java    Java Swing demonstration
-    GalleryGenerator.java    Deterministic README example-sheet generator
-    ConformanceFixtureGenerator.java Java-generated cross-language test fixtures
+    GalleryGenerator.java    Both-width README example-sheet generator
+    ConformanceFixtureGenerator.java Both-width cross-language fixture generator
 java/renderer-swing/        Optional Swing/Java2D renderer JPMS module
-  bitsquiggles/renderer/swing/BitSquiggle32RendererSwing.java
-                            Smooth and exact renderers
+  bitsquiggles/renderer/swing/BitSquigglesRendererSwing.java
+                            Shared renderer with explicit 32/40-bit methods
 java/renderer-javafx/       Optional JavaFX renderer JPMS module
-  bitsquiggles/renderer/javafx/BitSquiggle32RendererJavaFX.java
-                            Smooth and exact renderers
+  bitsquiggles/renderer/javafx/BitSquigglesRendererJavaFX.java
+                            Shared renderer with explicit 32/40-bit methods
 java/README.md              Java integration and rendering guide
 c/
-  bitsquiggle32.h           C99 public core API
-  bitsquiggle32.c           C99 core implementation
-  test_bitsquiggle32.c      C99 conformance and property tests
+  bitsquiggles_core.h       Shared C99 32/40-bit core API
+  bitsquiggles_core.c       Shared C99 32/40-bit implementation
+  bitsquiggles_renderer_framebuffer.h One-include application facade
+  bitsquiggles_renderer_framebuffer.c Generic exact-raster renderer
+  generate_packed_tables.py Design-time packed-table generator
+  test_bitsquiggles_core.c  32/40-bit conformance and property tests
+  test_bitsquiggles_renderer_framebuffer.c Both-width renderer facade tests
   README.md                 C99 integration guide
 dart/
-  bitsquiggle32.dart        Dependency-free Dart core
-  bitsquiggles_renderer_flutter.dart Optional Flutter exact-raster and smooth renderer
-  test_bitsquiggle32.dart   Dart conformance and shared-fixture tests
+  bitsquiggles_core.dart    Shared dependency-free Dart 32/40-bit core
+  bitsquiggles_renderer_flutter.dart Unified Flutter application facade
+  test_bitsquiggles_core.dart Both-width conformance and property tests
+  test/                     Flutter Canvas and widget tests
+  pubspec.yaml              Non-published Flutter validation harness
   README.md                 Dart and Flutter integration guide
 micropython/
-  bitsquiggle32.py         MicroPython-compatible implementation
-  bitsquiggles_renderer_pyqt6.py Optional PyQt6 exact-raster and smooth renderers
-  bitsquiggles_renderer_lvgl.py Optional LVGL exact-raster and smooth renderers
-  test_bitsquiggle32.py    Python conformance and property tests
+  bitsquiggles_core.py     Shared MicroPython-compatible 32/40-bit core
+  generate_packed_tables.py Design-time packed-table generator
+  bitsquiggle_renderer_framebuffer.py Generic exact-raster renderer
+  bitsquiggle_renderer_pyqt6.py Optional PyQt6 exact-raster and smooth renderer
+  bitsquiggle_renderer_lvgl.py Optional LVGL exact-raster and smooth renderer
+  test_bitsquiggles_core.py 32/40-bit conformance and property tests
+  test_bitsquiggle_renderer_framebuffer.py Framebuffer renderer tests
+  test_bitsquiggle_renderer_lvgl.py CPython-fake LVGL renderer tests
+  test_bitsquiggle_renderer_pyqt6.py Offscreen PyQt6 renderer tests
   README.md                 Python and MicroPython integration guide
 docs/examples/             Generated README example sheets
-fixtures/v1.json           Versioned cross-language conformance fixture
-pyproject.toml              CPython package metadata for `bitsquiggle32`
+fixtures/v1-32.json        Versioned 32-bit cross-language conformance fixture
+fixtures/v1-40.json        Versioned 40-bit cross-language conformance fixture
+pyproject.toml              CPython package metadata for BitSquiggles
 web/                       Static GitHub Pages playground, ESM package, and tests
-  bitsquiggle32-renderer-canvas.js Optional Canvas 2D renderer
+  bitsquiggles-core.js      Shared JavaScript 32/40-bit core
+  bitsquiggles-renderer-canvas.js Unified Canvas 2D application facade
+  bitsquiggles-core.test.mjs Both-width conformance and property tests
+  bitsquiggles-renderer-canvas.test.mjs Canvas facade tests
   playground.js             Live playground application
 web/README.md               JavaScript and TypeScript integration guide
 .githooks/pre-commit       Regenerates and stages example sheets locally
@@ -331,8 +381,8 @@ web/README.md               JavaScript and TypeScript integration guide
 When behavior, constants, or formats change, update the affected
 [normative specification chapter](SPEC.md) and the conformance tests together.
 When rendering changes, regenerate
-`docs/examples/` and `fixtures/v1.json` with their Java generators as
-described above. Keep project motivation, safety boundaries, status, and
+`docs/examples/`, `fixtures/v1-32.json`, and `fixtures/v1-40.json` with their
+Java generators as described above. Keep project motivation, safety boundaries, status, and
 trade-offs here; keep normative behavior in the specification; and keep
 language-specific setup and rendering instructions in the port guides.
 
