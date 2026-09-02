@@ -16,7 +16,8 @@ Thanks for helping improve BitSquiggles.
   linked from [SPEC.md](SPEC.md) first.
 2. Keep every maintained core implementation conformant with `fixtures/v1.json`.
 3. Keep the core dependency-free; renderers and demos remain optional layers.
-4. Regenerate tracked gallery and fixture outputs when the Java generators require it.
+4. Regenerate and verify tracked generated artifacts according to their owning
+  port guides.
 5. Do not weaken the project’s safety boundary: BitSquiggles compares an
   already-derived 32-bit or 40-bit value and is not authentication or
   authorization.

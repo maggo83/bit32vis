@@ -45,7 +45,11 @@ jobs:
       - name: Run JavaScript core and playground tests
         run: npm test --prefix web
       - name: Run MicroPython-compatible tests under CPython
-        run: python3 micropython/test_bitsquiggle32.py
+        run: |
+          python3 micropython/generate_packed_tables.py --check
+          python3 micropython/test_bitsquiggles_core.py
+          python3 micropython/test_bitsquiggle_renderer_framebuffer.py
+          python3 micropython/test_bitsquiggle_renderer_lvgl.py
       - name: Run Dart core tests
         run: dart dart/test_bitsquiggle32.dart
       - name: Install Qt runtime libraries
@@ -55,6 +59,6 @@ jobs:
       - name: Run optional PyQt6 renderer tests
         run: |
           python3 -m pip install '.[pyqt6]'
-          QT_QPA_PLATFORM=offscreen python3 micropython/test_bitsquiggles_renderer_pyqt6.py
+          QT_QPA_PLATFORM=offscreen python3 micropython/test_bitsquiggle_renderer_pyqt6.py
       - name: Build and run C99 conformance tests
         run: make -C c test

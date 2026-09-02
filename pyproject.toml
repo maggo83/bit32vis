@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bitsquiggles"
 version = "0.1.0-beta.1"
-description = "Dependency-free BitSquiggle32 visual encoding"
+description = "Dependency-free BitSquiggles visual encoding"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
@@ -26,4 +26,9 @@ pyqt6 = ["PyQt6>=6.5"]
 
 [tool.setuptools]
 package-dir = { "" = "micropython" }
-py-modules = ["bitsquiggle32", "bitsquiggles_renderer_pyqt6"]
+py-modules = [
+  "bitsquiggles_core",
+  "bitsquiggle_renderer_framebuffer",
+  "bitsquiggle_renderer_lvgl",
+  "bitsquiggle_renderer_pyqt6",
+]

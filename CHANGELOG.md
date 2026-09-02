@@ -5,7 +5,15 @@ rules are defined in [RELEASING.md](RELEASING.md).
 
 ## Unreleased
 
-- No changes yet.
+- Added BitSquiggle40 to the Python/MicroPython port and consolidated both
+  widths in one dependency-free core with separate framebuffer, LVGL, and
+  PyQt6 renderers.
+- Replaced runtime mode-definition structures with generated packed tables
+  suitable for frozen MicroPython modules.
+- Changed the LVGL renderer to return caller-owned resource tuples, remove
+  global per-render retention, and pass RGB565 raster bytearrays without
+  copying them.
+- Batched framebuffer foreground pixels into maximal vertical runs.
 
 ## 0.1.0-beta.1 — 2026-07-22
 
