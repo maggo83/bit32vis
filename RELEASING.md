@@ -32,7 +32,8 @@ the only published artifacts so far.
   and compatibility notes.
 2. Run the repository verification workflow checks locally or in CI: Java core,
    renderer/demo tests, generated gallery, generated fixture, CPython/MicroPython
-   harness, JavaScript core test, playground smoke test, and package dry run.
+   harness, C core and framebuffer renderer tests, JavaScript core test,
+   playground smoke test, and package dry run.
   When changing the optional LVGL renderer, also validate exact and smooth
   output in an LVGL simulator and on representative hardware.
 3. Regenerate and review `docs/examples/` and `fixtures/v1.json` with the Java
@@ -54,8 +55,9 @@ the only published artifacts so far.
   not part of the dependency-free CPython package.
 - The JavaScript package publishes the dependency-free ESM core and explicitly
   named optional renderer subpaths.
-- The C99 distribution consists of the dependency-free header, source, and
-  conformance harness; it has no renderer dependency.
+- The C99 distribution consists of the dependency-free core and framebuffer
+  renderer headers and sources plus their conformance harnesses. Applications
+  include only the renderer header; it has no external framework dependency.
 - Publication to Maven Central, PyPI, or npm requires an approved maintainer
   account and the registry name reserved by the project.
 

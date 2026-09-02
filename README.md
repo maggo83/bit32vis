@@ -217,6 +217,7 @@ Current state:
 - optional Swing/Java2D and JavaFX desktop renderers are available;
 - the Python port includes an optional PyQt6 exact-raster and smooth renderer;
 - the MicroPython port includes optional LVGL exact-raster and smooth renderers;
+- the C99 port includes a generic fill-rectangle exact-raster renderer;
 - the Dart port includes an optional Flutter exact-raster and smooth renderer;
 - proof-of-concept integrations have been verified in simulators for Sparrow,
   Bitcoin Safe, Bull Bitcoin, BitBox, ColdCard, and Specter, and the Specter
@@ -324,9 +325,13 @@ java/renderer-javafx/       Optional JavaFX renderer JPMS module
                             Smooth and exact renderers
 java/README.md              Java integration and rendering guide
 c/
-  bitsquiggle32.h           C99 public core API
-  bitsquiggle32.c           C99 core implementation
-  test_bitsquiggle32.c      C99 conformance and property tests
+  bitsquiggles_core.h       Shared C99 32/40-bit core API
+  bitsquiggles_core.c       Shared C99 32/40-bit implementation
+  bitsquiggles_renderer_framebuffer.h One-include application facade
+  bitsquiggles_renderer_framebuffer.c Generic exact-raster renderer
+  generate_packed_tables.py Design-time packed-table generator
+  test_bitsquiggles_core.c  32/40-bit conformance and property tests
+  test_bitsquiggles_renderer_framebuffer.c Both-width renderer facade tests
   README.md                 C99 integration guide
 dart/
   bitsquiggle32.dart        Dependency-free Dart core

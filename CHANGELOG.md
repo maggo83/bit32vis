@@ -5,6 +5,10 @@ rules are defined in [RELEASING.md](RELEASING.md).
 
 ## Unreleased
 
+- Added BitSquiggle40 to the C99 port and consolidated both widths behind one
+  width-selected implementation, shared result types, and generated packed
+  mode tables. Added an allocation-free fill-rectangle renderer whose single
+  application header exposes width-specific spec, pixel, and raster operations.
 - Added BitSquiggle40 to the Python/MicroPython port and consolidated both
   widths in one dependency-free core with separate framebuffer, LVGL, and
   PyQt6 renderers.
